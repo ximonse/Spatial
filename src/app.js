@@ -27,6 +27,7 @@ import {
   deleteSelectedCards,
   createNewCard
 } from './ui/cardOperations.js';
+import { setupKeyboardShortcuts } from './ui/keyboardShortcuts.js';
 
 export class SpatialNoteApp {
   constructor() {
@@ -120,111 +121,7 @@ export class SpatialNoteApp {
    * Setup keyboard shortcuts
    */
   _setupKeyboardShortcuts() {
-    let lastKey = null;
-    let lastKeyTime = 0;
-
-    document.addEventListener('keydown', (e) => {
-      // Ignore if typing in input
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-        return;
-      }
-
-      const key = e.key.toLowerCase();
-      const now = Date.now();
-
-      // Check for G+V, G+H, G+T combinations (within 500ms)
-      if (lastKey === 'g' && now - lastKeyTime < 500) {
-        if (key === 'v') {
-          arrangeGridVertical();
-          lastKey = null;
-          return;
-        } else if (key === 'h') {
-          arrangeGridHorizontal();
-          lastKey = null;
-          return;
-        } else if (key === 't') {
-          arrangeKanban();
-          lastKey = null;
-          return;
-        }
-      }
-
-      // Remember last key for combinations
-      lastKey = key;
-      lastKeyTime = now;
-
-      switch (key) {
-        case 'n':
-          createNewCard();
-          break;
-
-        case 'v':
-          arrangeVertical();
-          break;
-
-        case 'h':
-          arrangeHorizontal();
-          break;
-
-        case 'g':
-          arrangeGrid();
-          break;
-
-        case 'q':
-          arrangeCircle();
-          break;
-
-        case 'k':
-          this.toggleView();
-          break;
-
-        case 'escape':
-          state.clearSelection();
-          state.set('searchQuery', '');
-          document.getElementById('search-input').value = '';
-          break;
-
-        case 'a':
-          if (e.ctrlKey || e.metaKey) {
-            e.preventDefault();
-            state.selectAll();
-          }
-          break;
-
-        case 'c':
-          if (e.ctrlKey || e.metaKey) {
-            e.preventDefault();
-            copySelectedCards();
-          }
-          break;
-
-        case 'v':
-          if (e.ctrlKey || e.metaKey) {
-            e.preventDefault();
-            pasteCards();
-          }
-          break;
-
-        case 'd':
-          if (e.ctrlKey || e.metaKey) {
-            e.preventDefault();
-            duplicateSelectedCards();
-          }
-          break;
-
-        case 'p':
-          togglePinSelectedCards();
-          break;
-
-        case 'delete':
-        case 'backspace':
-          if (!e.target.matches('input, textarea')) {
-            e.preventDefault();
-            deleteSelectedCards();
-          }
-          break;
-      }
-    });
+    setupKeyboardShortcuts(this);
   }
 
   /**

@@ -17,6 +17,10 @@ import {
   createNewCard,
   deleteSelectedCards
 } from './cardOperations.js';
+import { exportToJSON, importFromJSON } from '../io/jsonIO.js';
+import { createBackup, restoreBackup } from '../io/backup.js';
+import { multiImportFromText } from '../io/multiImport.js';
+import { showExportDialog } from '../io/textExport.js';
 
 export class CommandPalette {
   constructor() {
@@ -95,6 +99,36 @@ export class CommandPalette {
         name: 'Delete Selected',
         key: 'Del',
         action: () => deleteSelectedCards(),
+      },
+      {
+        name: 'Export to JSON',
+        key: 'S',
+        action: () => exportToJSON(),
+      },
+      {
+        name: 'Import from JSON',
+        key: 'L',
+        action: () => importFromJSON(),
+      },
+      {
+        name: 'Create Backup (ZIP)',
+        key: 'B',
+        action: () => createBackup(),
+      },
+      {
+        name: 'Restore from Backup',
+        key: 'R',
+        action: () => restoreBackup(),
+      },
+      {
+        name: 'Multi-Import from Text',
+        key: 'M',
+        action: () => multiImportFromText(),
+      },
+      {
+        name: 'Export to Text',
+        key: 'E',
+        action: () => showExportDialog(),
       },
     ];
 
