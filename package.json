@@ -1,0 +1,21 @@
+{
+  "name": "spatial-note",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "konva": "^9.3.18",
+    "dexie": "^4.0.11",
+    "jszip": "^3.10.1",
+    "browser-image-compression": "^2.0.2",
+    "marked": "^13.0.3"
+  },
+  "devDependencies": {
+    "vite": "^5.4.11"
+  }
+}

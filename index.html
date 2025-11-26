@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Spatial Note - A7 index card spatial organizer inspired by Zettelkasten">
+  <title>Spatial Note</title>
+</head>
+<body>
+  <div id="app">
+    <!-- Canvas container -->
+    <div id="canvas-container"></div>
+
+    <!-- UI Overlay -->
+    <div id="ui-overlay">
+      <!-- Toolbar -->
+      <div id="toolbar">
+        <button id="btn-new-card" title="New Card (N)">+ New Card</button>
+        <button id="btn-toggle-view" title="Toggle View (K)">Board View</button>
+        <input type="text" id="search-input" placeholder="Search... (F)" />
+        <div id="zoom-indicator">100%</div>
+      </div>
+
+      <!-- Command Palette (hidden by default) -->
+      <div id="command-palette" class="hidden">
+        <input type="text" id="command-input" placeholder="Type a command..." />
+        <div id="command-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
