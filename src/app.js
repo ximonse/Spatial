@@ -9,6 +9,7 @@ import { CARD_TYPES } from './utils/constants.js';
 import { cardEditor } from './ui/editor.js';
 import { commandPalette } from './ui/commandPalette.js';
 import { overlayManager } from './cards/overlayManager.js';
+import { columnView } from './ui/columnView.js';
 import {
   arrangeVertical,
   arrangeHorizontal,
@@ -58,6 +59,14 @@ export class SpatialNoteApp {
     overlayManager.init();
     console.log('✅ Overlay manager initialized');
 
+    // Initialize column view
+    columnView.init();
+    console.log('✅ Column view initialized');
+
+    // Restore saved view
+    const savedView = await db.getSetting('currentView', 'board');
+    state.set('currentView', savedView);
+
     // Setup UI interactions
     this._setupUI();
 
@@ -85,12 +94,17 @@ export class SpatialNoteApp {
 
     // Toggle view button
     const btnToggleView = document.getElementById('btn-toggle-view');
-    btnToggleView?.addEventListener('click', () => {
+    const updateViewButton = () => {
       const currentView = state.get('currentView');
-      const newView = currentView === 'board' ? 'column' : 'board';
-      state.set('currentView', newView);
-      btnToggleView.textContent = newView === 'board' ? 'Board View' : 'Column View';
+      btnToggleView.textContent = currentView === 'board' ? 'Board View' : 'Column View';
+    };
+
+    btnToggleView?.addEventListener('click', () => {
+      this.toggleView();
     });
+
+    updateViewButton();
+    state.subscribe('currentView', updateViewButton);
 
     // Search input
     const searchInput = document.getElementById('search-input');
@@ -158,6 +172,10 @@ export class SpatialNoteApp {
 
         case 'q':
           arrangeCircle();
+          break;
+
+        case 'k':
+          this.toggleView();
           break;
 
         case 'escape':
@@ -231,6 +249,22 @@ export class SpatialNoteApp {
     });
   }
 
+
+  /**
+   * Toggle between board and column view
+   */
+  async toggleView() {
+    const currentView = state.get('currentView');
+    const newView = currentView === 'board' ? 'column' : 'board';
+    state.set('currentView', newView);
+
+    // Save to database
+    import('./core/db.js').then(({ db }) => {
+      db.saveSetting('currentView', newView);
+    });
+
+    console.log(`📋 Switched to ${newView} view`);
+  }
 
   /**
    * Create welcome card
