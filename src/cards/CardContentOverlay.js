@@ -8,9 +8,10 @@ import { CARD } from '../utils/constants.js';
 import { stageManager } from '../core/stage.js';
 
 export class CardContentOverlay {
-  constructor(cardId, content, initialX, initialY, initialHeight) {
+  constructor(cardId, content, initialX, initialY, initialHeight, comments = '') {
     this.cardId = cardId;
     this.content = content;
+    this.comments = comments;
     this.x = initialX;
     this.y = initialY;
     this.height = initialHeight || CARD.MIN_HEIGHT;
@@ -57,13 +58,21 @@ export class CardContentOverlay {
   /**
    * Update content
    */
-  updateContent(content) {
+  updateContent(content, comments = '') {
     this.content = content;
+    this.comments = comments;
     if (!this.element) return;
 
     try {
       const html = marked.parse(content || '');
-      this.element.innerHTML = html;
+
+      // Add comments in italic gray if present
+      let fullHtml = html;
+      if (comments) {
+        fullHtml += `<div style="margin-top: 8px; font-style: italic; color: #6B7280; font-size: 0.9em;">${comments}</div>`;
+      }
+
+      this.element.innerHTML = fullHtml;
     } catch (error) {
       console.error('Markdown parse error:', error);
       this.element.textContent = content;
@@ -97,6 +106,9 @@ export class CardContentOverlay {
       font-size: ${14 * scale}px;
       line-height: 1.5;
       color: #111827;
+      background: #FFFFFF;
+      border: ${2 * scale}px solid #000000;
+      border-radius: ${CARD.CORNER_RADIUS * scale}px;
       opacity: ${this.visible ? 1 : 0};
       transition: opacity 0.15s;
     `;

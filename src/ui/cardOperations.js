@@ -7,6 +7,7 @@ import { state } from '../core/state.js';
 import { cardFactory } from '../cards/CardFactory.js';
 import { stageManager } from '../core/stage.js';
 import { CARD_TYPES } from '../utils/constants.js';
+import { statusNotification } from './statusNotification.js';
 
 /**
  * Copy selected cards to clipboard
@@ -16,6 +17,7 @@ export function copySelectedCards() {
   if (selectedCards.length === 0) return;
 
   state.set('clipboard', selectedCards);
+  statusNotification.showTemporary(`📋 Copied ${selectedCards.length} card(s)`);
   console.log(`📋 Copied ${selectedCards.length} card(s)`);
 }
 
@@ -32,37 +34,41 @@ export async function pasteCards() {
   const stage = stageManager.getStage();
   const scale = stage.scaleX();
   const pointer = stage.getPointerPosition();
+  const stagePos = stage.position();
 
-  // If no pointer position, use center
+  // If no pointer position, use center of viewport
   let pasteX, pasteY;
   if (pointer) {
-    pasteX = (pointer.x - stage.x()) / scale;
-    pasteY = (pointer.y - stage.y()) / scale;
+    pasteX = (pointer.x - stagePos.x) / scale;
+    pasteY = (pointer.y - stagePos.y) / scale;
   } else {
-    pasteX = (stage.width() / 2 - stage.x()) / scale;
-    pasteY = (stage.height() / 2 - stage.y()) / scale;
+    // Center of visible viewport in canvas coordinates
+    pasteX = -stagePos.x / scale + (stage.width() / scale) / 2;
+    pasteY = -stagePos.y / scale + (stage.height() / scale) / 2;
   }
 
   // Calculate offset from first card
   const firstCard = clipboard[0];
-  const offsetX = pasteX - firstCard.x;
-  const offsetY = pasteY - firstCard.y;
+  const offsetX = pasteX - (firstCard.x || 0);
+  const offsetY = pasteY - (firstCard.y || 0);
 
   // Clear selection and paste cards
   state.clearSelection();
 
   for (const cardData of clipboard) {
     const newCard = await cardFactory.createCard(cardData.type, {
-      x: cardData.x + offsetX,
-      y: cardData.y + offsetY,
+      x: (cardData.x || 0) + offsetX,
+      y: (cardData.y || 0) + offsetY,
       content: cardData.content,
       tags: cardData.tags,
+      comments: cardData.comments,
       pinned: false, // Don't copy pinned state
     });
 
     state.selectCard(newCard.data.id);
   }
 
+  statusNotification.showTemporary(`✅ Pasted ${clipboard.length} card(s)`);
   console.log(`✅ Pasted ${clipboard.length} card(s)`);
 }
 
@@ -79,16 +85,18 @@ export async function duplicateSelectedCards() {
 
   for (const cardData of selectedCards) {
     const newCard = await cardFactory.createCard(cardData.type, {
-      x: cardData.x + OFFSET,
-      y: cardData.y + OFFSET,
+      x: (cardData.x || 0) + OFFSET,
+      y: (cardData.y || 0) + OFFSET,
       content: cardData.content,
       tags: cardData.tags,
+      comments: cardData.comments,
       pinned: false,
     });
 
     state.selectCard(newCard.data.id);
   }
 
+  statusNotification.showTemporary(`✅ Duplicated ${selectedCards.length} card(s)`);
   console.log(`✅ Duplicated ${selectedCards.length} card(s)`);
 }
 
@@ -105,6 +113,7 @@ export async function togglePinSelectedCards() {
     cardData.pinned = newPinnedState;
   }
 
+  statusNotification.showTemporary(`📌 Toggled pin for ${selectedCards.length} card(s)`);
   console.log(`📌 Toggled pin for ${selectedCards.length} card(s)`);
 }
 
@@ -121,6 +130,7 @@ export async function deleteSelectedCards() {
   const ids = selectedCards.map(c => c.id);
   await cardFactory.deleteCards(ids);
 
+  statusNotification.showTemporary(`🗑️ Deleted ${ids.length} cards`);
   console.log(`🗑️ Deleted ${ids.length} cards`);
 }
 
@@ -144,6 +154,9 @@ export async function createNewCard() {
   // Select the new card
   state.clearSelection();
   state.selectCard(card.data.id);
+
+  // Open editor immediately
+  state.set('editingCardId', card.data.id);
 
   console.log('✅ Created new card');
 }

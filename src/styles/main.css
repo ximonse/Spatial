@@ -2,6 +2,12 @@
  * Global styles for Spatial Note
  */
 
+:root {
+  --accent-color: #3B82F6;
+  --accent-light: #DBEAFE;
+  --accent-dark: #1E40AF;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -11,7 +17,7 @@
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   overflow: hidden;
-  background: #F9FAFB;
+  background: #FFFFFF;
   color: #111827;
 }
 
@@ -46,17 +52,75 @@ body {
 
 /* Toolbar */
 #toolbar {
-  position: absolute;
-  top: 20px;
+  position: fixed;
+  top: 0;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   gap: 10px;
   align-items: center;
   background: white;
-  padding: 10px 20px;
-  border-radius: 12px;
+  padding: 12px 20px;
+  border-radius: 0 0 12px 12px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  transition: all 0.3s ease;
+}
+
+#toolbar.toolbar-collapsed {
+  transform: translateX(-50%) translateY(-100%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+#toolbar.toolbar-expanded {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Collapse button inside toolbar */
+.toolbar-toggle-btn {
+  padding: 6px 12px;
+  border: 1px solid #E5E7EB;
+  background: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #6B7280;
+  transition: all 0.15s;
+  margin-left: auto;
+}
+
+.toolbar-toggle-btn:hover {
+  background: #F3F4F6;
+  border-color: #9CA3AF;
+  color: #111827;
+}
+
+/* Show toolbar button (when collapsed) */
+.toolbar-show-btn {
+  position: fixed;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  padding: 6px 16px;
+  font-size: 16px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 11;
+  transition: all 0.2s;
+  color: #6B7280;
+}
+
+.toolbar-show-btn:hover {
+  background: #F3F4F6;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-color: #9CA3AF;
+  color: #111827;
 }
 
 #toolbar button {
@@ -72,7 +136,7 @@ body {
 
 #toolbar button:hover {
   background: #F9FAFB;
-  border-color: #3B82F6;
+  border-color: #9CA3AF;
 }
 
 #search-input {
@@ -83,9 +147,23 @@ body {
   width: 200px;
 }
 
+#toolbar-sort {
+  padding: 8px 12px;
+  border: 1px solid #E5E7EB;
+  border-radius: 6px;
+  font-size: 14px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+#toolbar-sort:hover {
+  border-color: #9CA3AF;
+}
+
 #search-input:focus {
   outline: none;
-  border-color: #3B82F6;
+  border-color: #9CA3AF;
 }
 
 #zoom-indicator {
@@ -167,8 +245,8 @@ body {
 
 /* Selection */
 ::selection {
-  background: #DBEAFE;
-  color: #1E40AF;
+  background: #E5E7EB;
+  color: #111827;
 }
 
 /* Scrollbar */
@@ -274,7 +352,7 @@ body {
 
 #editor-textarea:focus {
   outline: none;
-  border-color: #3B82F6;
+  border-color: #9CA3AF;
 }
 
 .editor-preview {
@@ -282,7 +360,7 @@ body {
   border-radius: 8px;
   padding: 12px;
   overflow-y: auto;
-  background: #F9FAFB;
+  background: #FFFFFF;
 }
 
 .editor-preview h4 {
@@ -343,13 +421,13 @@ body {
 }
 
 .btn-primary {
-  background: #3B82F6;
+  background: #111827;
   color: white;
   border: none;
 }
 
 .btn-primary:hover {
-  background: #2563EB;
+  background: #374151;
 }
 
 .btn-secondary {
@@ -430,7 +508,7 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background: #F9FAFB;
+  background: #FFFFFF;
   z-index: 5;
   overflow: hidden;
   display: flex;
@@ -441,35 +519,12 @@ body {
   padding: 20px;
   border-bottom: 1px solid #E5E7EB;
   background: white;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
 }
 
 .column-view-header h2 {
   margin: 0;
   font-size: 24px;
   font-weight: 600;
-}
-
-.column-view-sort {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.column-view-sort label {
-  font-size: 14px;
-  color: #6B7280;
-}
-
-.column-view-sort select {
-  padding: 6px 12px;
-  border: 1px solid #E5E7EB;
-  border-radius: 6px;
-  font-size: 14px;
-  background: white;
-  cursor: pointer;
 }
 
 .column-view-list {
@@ -496,13 +551,13 @@ body {
 }
 
 .column-view-card:hover {
-  border-color: #3B82F6;
+  border-color: #9CA3AF;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .column-view-card.selected {
-  border-color: #3B82F6;
-  background: #EFF6FF;
+  border-color: #000000;
+  background: #F3F4F6;
 }
 
 .column-card-content {
@@ -555,4 +610,28 @@ body {
   padding: 2px 8px;
   border-radius: 4px;
   font-size: 11px;
+}
+
+/* Status Notification */
+#status-notification {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #111827;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.2s ease;
+  pointer-events: none;
+}
+
+#status-notification.visible {
+  opacity: 1;
+  transform: translateY(0);
 }

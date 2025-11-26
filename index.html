@@ -14,18 +14,30 @@
     <!-- UI Overlay -->
     <div id="ui-overlay">
       <!-- Toolbar -->
-      <div id="toolbar">
+      <div id="toolbar" class="toolbar-expanded">
         <button id="btn-new-card" title="New Card (N)">+ New Card</button>
         <button id="btn-toggle-view" title="Toggle View (K)">Board View</button>
-        <input type="text" id="search-input" placeholder="Search... (F)" />
+        <input type="text" id="search-input" placeholder="Search..." />
+        <select id="toolbar-sort" class="toolbar-sort hidden">
+          <option value="updated">Last Modified</option>
+          <option value="created">Date Created</option>
+          <option value="alpha">Alphabetical</option>
+        </select>
         <div id="zoom-indicator">100%</div>
+        <button id="toolbar-toggle" class="toolbar-toggle-btn" title="Hide toolbar">▲</button>
       </div>
+
+      <!-- Collapsed toolbar button -->
+      <button id="toolbar-show" class="toolbar-show-btn hidden" title="Show toolbar">▼</button>
 
       <!-- Command Palette (hidden by default) -->
       <div id="command-palette" class="hidden">
         <input type="text" id="command-input" placeholder="Type a command..." />
         <div id="command-list"></div>
       </div>
+
+      <!-- Status notification -->
+      <div id="status-notification"></div>
     </div>
   </div>
 

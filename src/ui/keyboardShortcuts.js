@@ -69,15 +69,16 @@ export function setupKeyboardShortcuts(app) {
         break;
 
       case 'v':
-        arrangeVertical();
+        if (e.ctrlKey || e.metaKey) {
+          e.preventDefault();
+          pasteCards();
+        } else {
+          arrangeVertical();
+        }
         break;
 
       case 'h':
         arrangeHorizontal();
-        break;
-
-      case 'g':
-        arrangeGrid();
         break;
 
       case 'q':
@@ -89,9 +90,20 @@ export function setupKeyboardShortcuts(app) {
         break;
 
       case 'escape':
+        // Blur any active input/textarea
+        if (document.activeElement &&
+            (document.activeElement.tagName === 'INPUT' ||
+             document.activeElement.tagName === 'TEXTAREA')) {
+          document.activeElement.blur();
+        }
+
+        // Clear selection and search
         state.clearSelection();
         state.set('searchQuery', '');
-        document.getElementById('search-input').value = '';
+        const searchInput = document.getElementById('search-input');
+        if (searchInput) {
+          searchInput.value = '';
+        }
         break;
 
       case 'a':
@@ -105,13 +117,6 @@ export function setupKeyboardShortcuts(app) {
         if (e.ctrlKey || e.metaKey) {
           e.preventDefault();
           copySelectedCards();
-        }
-        break;
-
-      case 'v':
-        if (e.ctrlKey || e.metaKey) {
-          e.preventDefault();
-          pasteCards();
         }
         break;
 

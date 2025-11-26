@@ -3,11 +3,11 @@
  * Based on cognitive psychology principles (Baddeley & Hitch, 1974)
  */
 
-// Card dimensions (inspired by A7 index cards: 74×105mm)
+// Card dimensions (A7 index cards: 74×105mm ratio = 1:1.42)
 export const CARD = {
   WIDTH: 200,
-  MIN_HEIGHT: 150,  // Minimum height
-  MAX_HEIGHT: 800,  // Maximum height before scrolling
+  MIN_HEIGHT: 80,  // Small minimum - cards adjust to content
+  MAX_HEIGHT: Infinity,  // Cards with content can grow infinitely
   CORNER_RADIUS: 8,
   PADDING: 12,
 };
@@ -16,15 +16,15 @@ export const CARD = {
 export const SPACING = {
   SAME_GROUP: 15,      // 13-20px = same group
   DIFFERENT_GROUP: 250, // 200-300px = different groups
-  GRID_HORIZONTAL: 215, // CARD.WIDTH + SAME_GROUP
-  GRID_VERTICAL: 165,   // CARD.HEIGHT + SAME_GROUP
+  GRID_HORIZONTAL: 215, // CARD.WIDTH + SAME_GROUP (200 + 15)
+  GRID_VERTICAL: 95,    // CARD.MIN_HEIGHT + SAME_GROUP (80 + 15)
 };
 
 // Colors
 export const COLORS = {
   CARD_BG: '#FFFFFF',
   CARD_BORDER: '#E5E7EB',
-  CARD_SELECTED: '#3B82F6',
+  CARD_SELECTED: '#000000',
   CARD_PINNED: '#EAB308',
   TEXT_PRIMARY: '#111827',
   TEXT_SECONDARY: '#6B7280',
@@ -35,9 +35,9 @@ export const COLORS = {
 export const THEMES = {
   LIGHT: {
     name: 'light',
-    canvas: '#F9FAFB',
+    canvas: '#FFFFFF',
     card: '#FFFFFF',
-    border: '#E5E7EB',
+    border: '#000000',
     text: '#111827',
     textSecondary: '#6B7280',
   },

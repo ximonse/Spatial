@@ -12,6 +12,8 @@ export class CardEditor {
     this.editorEl = null;
     this.textareaEl = null;
     this.previewEl = null;
+    this.tagsEl = null;
+    this.commentsEl = null;
     this.currentCardId = null;
   }
 
@@ -38,7 +40,21 @@ export class CardEditor {
           <button id="editor-close" class="editor-close">×</button>
         </div>
         <div class="editor-body">
-          <textarea id="editor-textarea" placeholder="Write your note here... (Markdown supported)"></textarea>
+          <div style="flex: 1; display: flex; flex-direction: column; gap: 10px;">
+            <textarea id="editor-textarea" placeholder="Write your note here... (Markdown supported)" style="flex: 1;"></textarea>
+            <input
+              id="editor-tags"
+              type="text"
+              placeholder="Tags (comma separated, e.g: viktigt, projekt, idé)"
+              style="padding: 8px 12px; border: 1px solid #E5E7EB; border-radius: 6px; font-size: 14px;"
+            />
+            <input
+              id="editor-comments"
+              type="text"
+              placeholder="Comment (e.g: författare: Simon, deadline: 2024-12-31)"
+              style="padding: 8px 12px; border: 1px solid #E5E7EB; border-radius: 6px; font-size: 14px;"
+            />
+          </div>
           <div class="editor-preview">
             <h4>Preview</h4>
             <div id="editor-preview-content"></div>
@@ -56,6 +72,8 @@ export class CardEditor {
     // Get references
     this.textareaEl = document.getElementById('editor-textarea');
     this.previewEl = document.getElementById('editor-preview-content');
+    this.tagsEl = document.getElementById('editor-tags');
+    this.commentsEl = document.getElementById('editor-comments');
   }
 
   /**
@@ -124,6 +142,16 @@ export class CardEditor {
     // Set textarea content
     this.textareaEl.value = cardData.content || '';
 
+    // Set tags (join array with commas)
+    this.tagsEl.value = (cardData.tags || []).join(', ');
+
+    // Set comments (join array with commas or use single string)
+    if (Array.isArray(cardData.comments)) {
+      this.commentsEl.value = cardData.comments.join(', ');
+    } else {
+      this.commentsEl.value = cardData.comments || '';
+    }
+
     // Update preview
     this._updatePreview();
 
@@ -158,8 +186,21 @@ export class CardEditor {
 
     const content = this.textareaEl.value;
 
+    // Parse tags (comma separated, trim whitespace)
+    const tagsText = this.tagsEl.value.trim();
+    const tags = tagsText
+      ? tagsText.split(',').map(t => t.trim()).filter(t => t.length > 0)
+      : [];
+
+    // Parse comments (store as single string)
+    const comments = this.commentsEl.value.trim();
+
     // Update card
-    await cardFactory.updateCard(this.currentCardId, { content });
+    await cardFactory.updateCard(this.currentCardId, {
+      content,
+      tags,
+      comments
+    });
 
     console.log('✅ Card saved');
 

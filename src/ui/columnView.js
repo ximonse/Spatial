@@ -13,6 +13,7 @@ export class ColumnView {
     this.containerEl = null;
     this.listEl = null;
     this.visible = false;
+    this.searchQuery = '';
   }
 
   /**
@@ -37,14 +38,6 @@ export class ColumnView {
     header.className = 'column-view-header';
     header.innerHTML = `
       <h2>All Cards</h2>
-      <div class="column-view-sort">
-        <label>Sort by:</label>
-        <select id="column-sort">
-          <option value="updated">Last Modified</option>
-          <option value="created">Date Created</option>
-          <option value="alpha">Alphabetical</option>
-        </select>
-      </div>
     `;
 
     // Create list container
@@ -74,10 +67,19 @@ export class ColumnView {
       this.setVisible(view === 'column');
     });
 
-    // Sort change
-    const sortSelect = document.getElementById('column-sort');
+    // Subscribe to search query changes from main toolbar
+    state.subscribe('searchQuery', (query) => {
+      if (this.visible) {
+        this._filterCards(query);
+      }
+    });
+
+    // Sort change (from toolbar sort dropdown)
+    const sortSelect = document.getElementById('toolbar-sort');
     sortSelect?.addEventListener('change', () => {
-      this.render();
+      if (this.visible) {
+        this.render();
+      }
     });
   }
 
@@ -105,20 +107,44 @@ export class ColumnView {
   }
 
   /**
+   * Filter cards based on search query
+   */
+  _filterCards(query) {
+    this.searchQuery = query.toLowerCase();
+    this.render();
+  }
+
+  /**
    * Render cards in list
    */
   render() {
     const cards = state.get('cards');
-    const sortBy = document.getElementById('column-sort')?.value || 'updated';
+    const sortBy = document.getElementById('toolbar-sort')?.value || 'updated';
+
+    // Filter cards by search query
+    let filteredCards = cards;
+    if (this.searchQuery) {
+      filteredCards = cards.filter(card => {
+        const content = (card.content || '').toLowerCase();
+        const tags = (card.tags || []).join(' ').toLowerCase();
+        const comments = (card.comments || '').toLowerCase();
+        return content.includes(this.searchQuery) ||
+               tags.includes(this.searchQuery) ||
+               comments.includes(this.searchQuery);
+      });
+    }
 
     // Sort cards
-    const sortedCards = this._sortCards([...cards], sortBy);
+    const sortedCards = this._sortCards([...filteredCards], sortBy);
 
     // Clear list
     this.listEl.innerHTML = '';
 
     if (sortedCards.length === 0) {
-      this.listEl.innerHTML = '<div class="column-view-empty">No cards yet. Press N to create one.</div>';
+      const message = this.searchQuery
+        ? `No cards found for "${this.searchQuery}"`
+        : 'No cards yet. Press N to create one.';
+      this.listEl.innerHTML = `<div class="column-view-empty">${message}</div>`;
       return;
     }
 

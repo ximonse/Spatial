@@ -17,6 +17,8 @@ export class TextCard {
     this.contentOverlay = null;
     this.selectionBorder = null;
     this.currentHeight = cardData.height || CARD.MIN_HEIGHT;
+    this.resizeObserver = null;
+    this.heightUpdateTimeout = null;
   }
 
   /**
@@ -39,12 +41,8 @@ export class TextCard {
       height: this.currentHeight,
       fill: theme.card,
       stroke: theme.border,
-      strokeWidth: 1,
+      strokeWidth: 2,
       cornerRadius: CARD.CORNER_RADIUS,
-      shadowColor: 'black',
-      shadowBlur: 4,
-      shadowOpacity: 0.1,
-      shadowOffset: { x: 0, y: 2 },
     });
 
     this.group.add(this.rect);
@@ -55,21 +53,30 @@ export class TextCard {
       this.data.content || '',
       this.data.x,
       this.data.y,
-      this.currentHeight
+      this.currentHeight,
+      this.data.comments || ''
     );
     this.contentOverlay.create();
 
-    // Update height after overlay is created
-    setTimeout(() => {
-      this._updateHeight();
-    }, 100);
+    // Setup ResizeObserver for automatic height updates
+    if (window.ResizeObserver) {
+      this.resizeObserver = new ResizeObserver(() => {
+        this._updateHeight();
+      });
+      this.resizeObserver.observe(this.contentOverlay.element);
+    } else {
+      // Fallback for older browsers
+      setTimeout(() => {
+        this._updateHeight();
+      }, 100);
+    }
 
     // Selection border (hidden by default, dynamic height)
     this.selectionBorder = new Konva.Rect({
       width: CARD.WIDTH,
       height: this.currentHeight,
       stroke: COLORS.CARD_SELECTED,
-      strokeWidth: 3,
+      strokeWidth: 4,
       cornerRadius: CARD.CORNER_RADIUS,
       visible: false,
     });
@@ -112,14 +119,15 @@ export class TextCard {
   /**
    * Update card content
    */
-  updateContent(content) {
+  updateContent(content, comments = null) {
     this.data.content = content;
-    this.contentOverlay.updateContent(content);
+    if (comments !== null) {
+      this.data.comments = comments;
+    }
+    this.contentOverlay.updateContent(content, this.data.comments || '');
 
-    // Update height after content changes
-    setTimeout(() => {
-      this._updateHeight();
-    }, 50);
+    // ResizeObserver will automatically trigger _updateHeight()
+    // No need for setTimeout anymore
   }
 
   /**
@@ -128,11 +136,11 @@ export class TextCard {
   _updateHeight() {
     if (!this.contentOverlay.element) return;
 
-    // Measure content height
+    // Measure content height (scrollHeight already includes padding)
     const contentHeight = this.contentOverlay.element.scrollHeight;
     const newHeight = Math.max(
       CARD.MIN_HEIGHT,
-      Math.min(CARD.MAX_HEIGHT, contentHeight + CARD.PADDING * 2)
+      Math.min(CARD.MAX_HEIGHT, contentHeight)
     );
 
     // Only update if height changed
@@ -149,10 +157,16 @@ export class TextCard {
 
       this.group.getLayer()?.batchDraw();
 
-      // Save to database
-      import('../core/db.js').then(({ db }) => {
-        db.updateCard(this.data.id, { height: newHeight });
-      });
+      // Debounce database save to avoid excessive writes
+      clearTimeout(this.heightUpdateTimeout);
+      this.heightUpdateTimeout = setTimeout(async () => {
+        try {
+          const { db } = await import('../core/db.js');
+          await db.updateCard(this.data.id, { height: newHeight });
+        } catch (error) {
+          console.error('Failed to save card height:', error);
+        }
+      }, 500);
     }
   }
 
@@ -180,6 +194,18 @@ export class TextCard {
    * Destroy card
    */
   destroy() {
+    // Cleanup ResizeObserver
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+      this.resizeObserver = null;
+    }
+
+    // Cleanup timeout
+    if (this.heightUpdateTimeout) {
+      clearTimeout(this.heightUpdateTimeout);
+      this.heightUpdateTimeout = null;
+    }
+
     this.group.destroy();
     this.contentOverlay.destroy();
   }

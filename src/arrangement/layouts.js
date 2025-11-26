@@ -1,34 +1,29 @@
 /**
- * Card arrangement algorithms
- * Based on spatial grouping principles (15px same group, 250px different groups)
+ * Card arrangement API
+ * Thin wrappers orchestrating utils and algorithms
  */
 
-import { CARD, SPACING } from '../utils/constants.js';
-import { state } from '../core/state.js';
-import { cardFactory } from '../cards/CardFactory.js';
+import { getOrPasteCards, applyPositionsToCards, getViewportPosition } from './arrangement-utils.js';
+import {
+  calculateVerticalLayout,
+  calculateHorizontalLayout,
+  calculateGridLayout,
+  calculateCircleLayout,
+  calculateGridVerticalLayout,
+  calculateGridHorizontalLayout,
+  calculateKanbanLayout,
+} from './arrangement-algorithms.js';
 
 /**
  * Arrange cards in vertical column
  */
-export function arrangeVertical() {
-  const selectedCards = state.getSelectedCards();
+export async function arrangeVertical() {
+  const selectedCards = await getOrPasteCards();
   if (selectedCards.length === 0) return;
 
-  // Get first card's position as starting point
-  const firstCard = selectedCards[0];
-  let currentY = firstCard.y;
-  const startX = firstCard.x;
-
-  selectedCards.forEach((cardData, index) => {
-    const card = cardFactory.getCard(cardData.id);
-    if (!card) return;
-
-    card.setPosition(startX, currentY);
-    cardData.x = startX;
-    cardData.y = currentY;
-
-    currentY += CARD.HEIGHT + SPACING.SAME_GROUP;
-  });
+  const startPos = getViewportPosition();
+  const positions = calculateVerticalLayout(selectedCards, startPos);
+  await applyPositionsToCards(positions);
 
   console.log(`✅ Arranged ${selectedCards.length} cards vertically`);
 }
@@ -36,24 +31,13 @@ export function arrangeVertical() {
 /**
  * Arrange cards in horizontal row
  */
-export function arrangeHorizontal() {
-  const selectedCards = state.getSelectedCards();
+export async function arrangeHorizontal() {
+  const selectedCards = await getOrPasteCards();
   if (selectedCards.length === 0) return;
 
-  const firstCard = selectedCards[0];
-  let currentX = firstCard.x;
-  const startY = firstCard.y;
-
-  selectedCards.forEach((cardData) => {
-    const card = cardFactory.getCard(cardData.id);
-    if (!card) return;
-
-    card.setPosition(currentX, startY);
-    cardData.x = currentX;
-    cardData.y = startY;
-
-    currentX += CARD.WIDTH + SPACING.SAME_GROUP;
-  });
+  const startPos = getViewportPosition();
+  const positions = calculateHorizontalLayout(selectedCards, startPos);
+  await applyPositionsToCards(positions);
 
   console.log(`✅ Arranged ${selectedCards.length} cards horizontally`);
 }
@@ -61,42 +45,22 @@ export function arrangeHorizontal() {
 /**
  * Arrange cards in grid
  */
-export function arrangeGrid(columns = 0) {
-  const selectedCards = state.getSelectedCards();
+export async function arrangeGrid(columns = 0) {
+  const selectedCards = await getOrPasteCards();
   if (selectedCards.length === 0) return;
 
-  // Auto-calculate columns if not specified
-  if (columns === 0) {
-    columns = Math.ceil(Math.sqrt(selectedCards.length));
-  }
+  const startPos = getViewportPosition();
+  const positions = calculateGridLayout(selectedCards, startPos, columns);
+  await applyPositionsToCards(positions);
 
-  const firstCard = selectedCards[0];
-  const startX = firstCard.x;
-  const startY = firstCard.y;
-
-  selectedCards.forEach((cardData, index) => {
-    const card = cardFactory.getCard(cardData.id);
-    if (!card) return;
-
-    const col = index % columns;
-    const row = Math.floor(index / columns);
-
-    const x = startX + col * SPACING.GRID_HORIZONTAL;
-    const y = startY + row * SPACING.GRID_VERTICAL;
-
-    card.setPosition(x, y);
-    cardData.x = x;
-    cardData.y = y;
-  });
-
-  console.log(`✅ Arranged ${selectedCards.length} cards in ${columns}-column grid`);
+  console.log(`✅ Arranged ${selectedCards.length} cards in ${columns || Math.ceil(Math.sqrt(selectedCards.length))}-column grid`);
 }
 
 /**
  * Arrange cards in circle/cluster
  */
-export function arrangeCircle() {
-  const selectedCards = state.getSelectedCards();
+export async function arrangeCircle() {
+  const selectedCards = await getOrPasteCards();
   if (selectedCards.length === 0) return;
 
   if (selectedCards.length === 1) {
@@ -104,99 +68,53 @@ export function arrangeCircle() {
     return;
   }
 
-  // Calculate center point from first card
-  const firstCard = selectedCards[0];
-  const centerX = firstCard.x + CARD.WIDTH / 2;
-  const centerY = firstCard.y + CARD.HEIGHT / 2;
-
-  // Radius based on number of cards
-  const radius = Math.max(150, selectedCards.length * 30);
-
-  selectedCards.forEach((cardData, index) => {
-    const card = cardFactory.getCard(cardData.id);
-    if (!card) return;
-
-    const angle = (index / selectedCards.length) * 2 * Math.PI;
-    const x = centerX + radius * Math.cos(angle) - CARD.WIDTH / 2;
-    const y = centerY + radius * Math.sin(angle) - CARD.HEIGHT / 2;
-
-    card.setPosition(x, y);
-    cardData.x = x;
-    cardData.y = y;
-  });
+  const centerPos = getViewportPosition();
+  const positions = calculateCircleLayout(selectedCards, centerPos);
+  await applyPositionsToCards(positions);
 
   console.log(`✅ Arranged ${selectedCards.length} cards in circle`);
 }
 
 /**
- * Arrange cards in vertical grid (multiple columns)
+ * Arrange cards in vertical grid (5 columns, each stacks independently)
+ * G+V: Each column stacks its cards vertically, independent of other columns
  */
-export function arrangeGridVertical() {
-  arrangeGrid(3); // Default to 3 columns
+export async function arrangeGridVertical() {
+  const selectedCards = await getOrPasteCards();
+  if (selectedCards.length === 0) return;
+
+  const startPos = getViewportPosition();
+  const positions = calculateGridVerticalLayout(selectedCards, startPos);
+  await applyPositionsToCards(positions);
+
+  console.log(`✅ Arranged ${selectedCards.length} cards in vertical grid (5 columns)`);
 }
 
 /**
- * Arrange cards in horizontal grid (multiple rows)
+ * Arrange cards in horizontal grid (5 columns, rows align at top)
+ * G+H: Cards in same row start at same Y, next row starts below tallest card
  */
-export function arrangeGridHorizontal() {
-  const selectedCards = state.getSelectedCards();
+export async function arrangeGridHorizontal() {
+  const selectedCards = await getOrPasteCards();
   if (selectedCards.length === 0) return;
 
-  const rows = 3; // Default to 3 rows
-  const columns = Math.ceil(selectedCards.length / rows);
+  const startPos = getViewportPosition();
+  const positions = calculateGridHorizontalLayout(selectedCards, startPos);
+  await applyPositionsToCards(positions);
 
-  const firstCard = selectedCards[0];
-  const startX = firstCard.x;
-  const startY = firstCard.y;
-
-  selectedCards.forEach((cardData, index) => {
-    const card = cardFactory.getCard(cardData.id);
-    if (!card) return;
-
-    const row = index % rows;
-    const col = Math.floor(index / rows);
-
-    const x = startX + col * SPACING.GRID_HORIZONTAL;
-    const y = startY + row * SPACING.GRID_VERTICAL;
-
-    card.setPosition(x, y);
-    cardData.x = x;
-    cardData.y = y;
-  });
-
-  console.log(`✅ Arranged ${selectedCards.length} cards in horizontal grid`);
+  console.log(`✅ Arranged ${selectedCards.length} cards in horizontal grid (5 columns)`);
 }
 
 /**
  * Arrange cards in Kanban-style overlapping columns
  */
-export function arrangeKanban() {
-  const selectedCards = state.getSelectedCards();
+export async function arrangeKanban() {
+  const selectedCards = await getOrPasteCards();
   if (selectedCards.length === 0) return;
 
-  const columns = 3;
-  const cardsPerColumn = Math.ceil(selectedCards.length / columns);
-
-  const firstCard = selectedCards[0];
-  const startX = firstCard.x;
-  const startY = firstCard.y;
-
-  const OVERLAP = 30; // Overlap cards in same column
-
-  selectedCards.forEach((cardData, index) => {
-    const card = cardFactory.getCard(cardData.id);
-    if (!card) return;
-
-    const col = Math.floor(index / cardsPerColumn);
-    const rowInCol = index % cardsPerColumn;
-
-    const x = startX + col * SPACING.GRID_HORIZONTAL;
-    const y = startY + rowInCol * OVERLAP;
-
-    card.setPosition(x, y);
-    cardData.x = x;
-    cardData.y = y;
-  });
+  const startPos = getViewportPosition();
+  const positions = calculateKanbanLayout(selectedCards, startPos);
+  await applyPositionsToCards(positions);
 
   console.log(`✅ Arranged ${selectedCards.length} cards in Kanban style`);
 }

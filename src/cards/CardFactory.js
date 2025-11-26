@@ -97,8 +97,11 @@ export class CardFactory {
     await db.updateCard(id, updates);
 
     // Update card instance
-    if (updates.content !== undefined) {
-      card.updateContent(updates.content);
+    if (updates.content !== undefined || updates.comments !== undefined) {
+      card.updateContent(
+        updates.content ?? card.data.content,
+        updates.comments !== undefined ? updates.comments : null
+      );
     }
 
     if (updates.x !== undefined || updates.y !== undefined) {

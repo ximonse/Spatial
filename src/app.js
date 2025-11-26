@@ -5,11 +5,14 @@
 import { stageManager } from './core/stage.js';
 import { cardFactory } from './cards/CardFactory.js';
 import { state } from './core/state.js';
+import { db } from './core/db.js';
 import { CARD_TYPES } from './utils/constants.js';
 import { cardEditor } from './ui/editor.js';
 import { commandPalette } from './ui/commandPalette.js';
 import { overlayManager } from './cards/overlayManager.js';
 import { columnView } from './ui/columnView.js';
+import { statusNotification } from './ui/statusNotification.js';
+import { searchCards } from './utils/search.js';
 import {
   arrangeVertical,
   arrangeHorizontal,
@@ -64,6 +67,10 @@ export class SpatialNoteApp {
     columnView.init();
     console.log('✅ Column view initialized');
 
+    // Initialize status notification
+    statusNotification.init();
+    console.log('✅ Status notification initialized');
+
     // Restore saved view
     const savedView = await db.getSetting('currentView', 'board');
     state.set('currentView', savedView);
@@ -95,9 +102,18 @@ export class SpatialNoteApp {
 
     // Toggle view button
     const btnToggleView = document.getElementById('btn-toggle-view');
+    const toolbarSort = document.getElementById('toolbar-sort');
+
     const updateViewButton = () => {
       const currentView = state.get('currentView');
       btnToggleView.textContent = currentView === 'board' ? 'Board View' : 'Column View';
+
+      // Show/hide sort dropdown based on view
+      if (currentView === 'column') {
+        toolbarSort?.classList.remove('hidden');
+      } else {
+        toolbarSort?.classList.add('hidden');
+      }
     };
 
     btnToggleView?.addEventListener('click', () => {
@@ -107,10 +123,46 @@ export class SpatialNoteApp {
     updateViewButton();
     state.subscribe('currentView', updateViewButton);
 
+    // Toolbar collapse/expand
+    const toolbarToggle = document.getElementById('toolbar-toggle');
+    const toolbarShow = document.getElementById('toolbar-show');
+    const toolbar = document.getElementById('toolbar');
+
+    // Hide toolbar (button inside toolbar)
+    toolbarToggle?.addEventListener('click', () => {
+      toolbar.classList.remove('toolbar-expanded');
+      toolbar.classList.add('toolbar-collapsed');
+      toolbarShow?.classList.remove('hidden');
+    });
+
+    // Show toolbar (small button at top when collapsed)
+    toolbarShow?.addEventListener('click', () => {
+      toolbar.classList.add('toolbar-expanded');
+      toolbar.classList.remove('toolbar-collapsed');
+      toolbarShow?.classList.add('hidden');
+    });
+
     // Search input
     const searchInput = document.getElementById('search-input');
     searchInput?.addEventListener('input', (e) => {
-      state.set('searchQuery', e.target.value);
+      const query = e.target.value;
+      state.set('searchQuery', query);
+
+      // Highlight matching cards as you type
+      if (query.trim()) {
+        this._highlightSearchMatches(query);
+      } else {
+        // Clear selection if search is empty
+        state.clearSelection();
+      }
+    });
+
+    // Enter key confirms search selection
+    searchInput?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        searchInput.blur(); // Leave search field
+      }
     });
 
     // Keyboard shortcuts
@@ -143,6 +195,22 @@ export class SpatialNoteApp {
       if (indicator) {
         indicator.textContent = `${Math.round(zoom * 100)}%`;
       }
+    });
+  }
+
+  /**
+   * Highlight cards matching search query
+   */
+  _highlightSearchMatches(query) {
+    const cards = state.get('cards');
+    const matchingIds = searchCards(cards, query);
+
+    // Clear current selection
+    state.clearSelection();
+
+    // Select all matching cards
+    matchingIds.forEach(id => {
+      state.selectCard(id);
     });
   }
 
