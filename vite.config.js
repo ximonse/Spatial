@@ -6,7 +6,7 @@ export default defineConfig({
     outDir: 'dist',
     assetsDir: 'assets',
     sourcemap: true,
-    minify: 'terser',
+    minify: 'esbuild', // Faster than terser, no extra dependency needed
     rollupOptions: {
       output: {
         manualChunks: {
