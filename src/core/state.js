@@ -14,7 +14,7 @@ class AppState {
 
       // View
       currentView: 'board', // 'board' or 'column'
-      theme: THEMES.LIGHT,
+      theme: THEMES.NATURE,
       zoom: ZOOM.DEFAULT,
 
       // UI

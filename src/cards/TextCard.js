@@ -15,10 +15,10 @@ export class TextCard {
     this.group = null;
     this.rect = null;
     this.contentOverlay = null;
-    this.selectionBorder = null;
     this.currentHeight = cardData.height || CARD.MIN_HEIGHT;
     this.resizeObserver = null;
     this.heightUpdateTimeout = null;
+    this.isSelected = false;
   }
 
   /**
@@ -40,8 +40,6 @@ export class TextCard {
       width: CARD.WIDTH,
       height: this.currentHeight,
       fill: theme.card,
-      stroke: theme.border,
-      strokeWidth: 2,
       cornerRadius: CARD.CORNER_RADIUS,
     });
 
@@ -70,18 +68,6 @@ export class TextCard {
         this._updateHeight();
       }, 100);
     }
-
-    // Selection border (hidden by default, dynamic height)
-    this.selectionBorder = new Konva.Rect({
-      width: CARD.WIDTH,
-      height: this.currentHeight,
-      stroke: COLORS.CARD_SELECTED,
-      strokeWidth: 4,
-      cornerRadius: CARD.CORNER_RADIUS,
-      visible: false,
-    });
-
-    this.group.add(this.selectionBorder);
 
     // Pin indicator (if pinned)
     if (this.data.pinned) {
@@ -112,8 +98,8 @@ export class TextCard {
    * Update selection visual
    */
   setSelected(isSelected) {
-    this.selectionBorder.visible(isSelected);
-    this.group.getLayer()?.batchDraw();
+    this.isSelected = isSelected;
+    this.contentOverlay.setSelected(isSelected);
   }
 
   /**
@@ -136,24 +122,32 @@ export class TextCard {
   _updateHeight() {
     if (!this.contentOverlay.element) return;
 
-    // Measure content height (scrollHeight already includes padding)
-    const contentHeight = this.contentOverlay.element.scrollHeight;
+    // Get current scale
+    const stage = this.group.getStage();
+    const scale = stage ? stage.scaleX() : 1;
+
+    // Measure natural content height by reading scrollHeight and dividing by scale
+    // scrollHeight includes the scaled padding and content
+    const scaledScrollHeight = this.contentOverlay.element.scrollHeight;
+    const naturalHeight = scaledScrollHeight / scale;
+
+    // Sanity check: if height is absurdly large, reset to MIN_HEIGHT
+    const safeHeight = (naturalHeight > 2000 || isNaN(naturalHeight))
+      ? CARD.MIN_HEIGHT
+      : naturalHeight;
+
     const newHeight = Math.max(
       CARD.MIN_HEIGHT,
-      Math.min(CARD.MAX_HEIGHT, contentHeight)
+      Math.min(CARD.MAX_HEIGHT, safeHeight)
     );
 
-    // Only update if height changed
+    // Only update if height changed significantly
     if (Math.abs(newHeight - this.currentHeight) > 5) {
       this.currentHeight = newHeight;
       this.data.height = newHeight;
 
       // Update Konva shapes
       this.rect.height(newHeight);
-      this.selectionBorder.height(newHeight);
-
-      // Update overlay
-      this.contentOverlay.setHeight(newHeight);
 
       this.group.getLayer()?.batchDraw();
 

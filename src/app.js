@@ -12,6 +12,7 @@ import { commandPalette } from './ui/commandPalette.js';
 import { overlayManager } from './cards/overlayManager.js';
 import { columnView } from './ui/columnView.js';
 import { statusNotification } from './ui/statusNotification.js';
+import { boxSelection } from './ui/boxSelection.js';
 import { searchCards } from './utils/search.js';
 import {
   arrangeVertical,
@@ -62,6 +63,10 @@ export class SpatialNoteApp {
     // Initialize overlay manager
     overlayManager.init();
     console.log('✅ Overlay manager initialized');
+
+    // Initialize box selection
+    boxSelection.init();
+    console.log('✅ Box selection initialized');
 
     // Initialize column view
     columnView.init();

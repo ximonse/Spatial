@@ -62,7 +62,6 @@ body {
   background: white;
   padding: 12px 20px;
   border-radius: 0 0 12px 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   z-index: 10;
   transition: all 0.3s ease;
 }
@@ -450,18 +449,21 @@ body {
   font-size: 1.5em;
   font-weight: 700;
   margin: 0 0 0.5em 0;
+  color: #5B8E7D;
 }
 
 .card-content-overlay h2 {
   font-size: 1.3em;
   font-weight: 600;
   margin: 0 0 0.4em 0;
+  color: #5B8E7D;
 }
 
 .card-content-overlay h3 {
   font-size: 1.1em;
   font-weight: 600;
   margin: 0 0 0.3em 0;
+  color: #5B8E7D;
 }
 
 .card-content-overlay p {
@@ -470,6 +472,7 @@ body {
 
 .card-content-overlay strong {
   font-weight: 700;
+  color: #BC4B51;
 }
 
 .card-content-overlay em {

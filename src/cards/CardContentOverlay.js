@@ -6,6 +6,7 @@
 import { marked } from 'marked';
 import { CARD } from '../utils/constants.js';
 import { stageManager } from '../core/stage.js';
+import { state } from '../core/state.js';
 
 export class CardContentOverlay {
   constructor(cardId, content, initialX, initialY, initialHeight, comments = '') {
@@ -17,6 +18,7 @@ export class CardContentOverlay {
     this.height = initialHeight || CARD.MIN_HEIGHT;
     this.element = null;
     this.visible = true;
+    this.selected = false;
   }
 
   /**
@@ -88,6 +90,7 @@ export class CardContentOverlay {
     const stage = stageManager.getStage();
     const scale = stage.scaleX();
     const stagePos = stage.position();
+    const theme = state.get('theme');
 
     // Calculate screen position
     const screenX = this.x * scale + stagePos.x;
@@ -98,19 +101,19 @@ export class CardContentOverlay {
       left: ${screenX}px;
       top: ${screenY}px;
       width: ${CARD.WIDTH * scale}px;
-      height: ${this.height * scale}px;
+      min-height: ${CARD.MIN_HEIGHT * scale}px;
       padding: ${CARD.PADDING * scale}px;
       box-sizing: border-box;
       overflow: hidden;
       pointer-events: none;
       font-size: ${14 * scale}px;
       line-height: 1.5;
-      color: #111827;
-      background: #FFFFFF;
-      border: ${2 * scale}px solid #000000;
+      color: ${theme.text};
+      background: ${theme.card};
+      border: ${(this.selected ? 3 : 2) * scale}px solid ${this.selected ? (theme.borderSelected || theme.border) : theme.border};
       border-radius: ${CARD.CORNER_RADIUS * scale}px;
       opacity: ${this.visible ? 1 : 0};
-      transition: opacity 0.15s;
+      transition: opacity 0.15s, border-width 0.1s;
     `;
   }
 
@@ -136,6 +139,14 @@ export class CardContentOverlay {
    */
   setVisible(visible) {
     this.visible = visible;
+    this.updatePosition();
+  }
+
+  /**
+   * Set selection state
+   */
+  setSelected(selected) {
+    this.selected = selected;
     this.updatePosition();
   }
 

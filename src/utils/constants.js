@@ -57,6 +57,19 @@ export const THEMES = {
     text: '#000000',
     textSecondary: '#4B5563',
   },
+  NATURE: {
+    name: 'nature',
+    canvas: '#8CB369',           // Grön - bakgrund
+    card: '#FFFFFF',
+    border: '#9CA3AF',           // Grå - vanliga kort-kanter
+    borderSelected: '#F4A259',   // Orange - markerade kort-kanter
+    borderMenu: '#5B8E7D',       // Teal - meny-kanter
+    text: '#2D3748',
+    textSecondary: '#6B7280',    // Grå - kommentarer
+    heading: '#5B8E7D',          // Teal - markdown rubriker
+    emphasis: '#BC4B51',         // Röd - fetmarkerad text
+    highlight: '#F4E285',        // Ljusgul - bakgrund/highlight
+  },
 };
 
 // Zoom limits
