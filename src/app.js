@@ -14,6 +14,8 @@ import { columnView } from './ui/columnView.js';
 import { statusNotification } from './ui/statusNotification.js';
 import { boxSelection } from './ui/boxSelection.js';
 import { searchCards } from './utils/search.js';
+import { mobileActionMenu } from './ui/mobileActionMenu.js';
+import { quickActionsBar } from './ui/quickActionsBar.js';
 import {
   arrangeVertical,
   arrangeHorizontal,
@@ -75,6 +77,13 @@ export class SpatialNoteApp {
     // Initialize status notification
     statusNotification.init();
     console.log('✅ Status notification initialized');
+
+    // Initialize mobile components
+    mobileActionMenu.init();
+    console.log('✅ Mobile action menu initialized');
+
+    quickActionsBar.init();
+    console.log('✅ Quick actions bar initialized');
 
     // Restore saved view
     const savedView = await db.getSetting('currentView', 'board');

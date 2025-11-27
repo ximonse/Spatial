@@ -1,11 +1,13 @@
 /**
  * Card interaction handlers (extracted from TextCard.js)
- * Handles click, drag, and hover interactions
+ * Handles click, drag, hover, and long-press interactions
  */
 
 import { state } from '../core/state.js';
 import { cardFactory } from './CardFactory.js';
 import { db } from '../core/db.js';
+import { addLongPressHandler } from '../utils/longPress.js';
+import { statusNotification } from '../ui/statusNotification.js';
 
 /**
  * Setup card interaction handlers
@@ -40,6 +42,27 @@ export function setupCardInteractions(card) {
   group.on('mouseleave', () => {
     document.body.style.cursor = 'default';
   });
+
+  // Long press to select (mobile)
+  addLongPressHandler(group, () => {
+    // Toggle selection on long press
+    state.toggleCardSelection(data.id);
+
+    // Show feedback
+    const isSelected = state.isSelected(data.id);
+    const selectedCount = state.get('selectedCards').size;
+
+    if (isSelected) {
+      statusNotification.show(`${selectedCount} card${selectedCount > 1 ? 's' : ''} selected`);
+    } else {
+      statusNotification.show('Card deselected');
+    }
+
+    // Add haptic feedback if available
+    if (navigator.vibrate) {
+      navigator.vibrate(50);
+    }
+  }, 500);
 
   // Drag start - setup multi-drag
   group.on('dragstart', () => {

@@ -22,6 +22,7 @@ import { createBackup, restoreBackup } from '../io/backup.js';
 import { multiImportFromText } from '../io/multiImport.js';
 import { showExportDialog } from '../io/textExport.js';
 import { importZoteroNotes } from '../io/zoteroImport.js';
+import { addLongPressHandlerDOM } from '../utils/longPress.js';
 
 export class CommandPalette {
   constructor() {
@@ -196,6 +197,21 @@ export class CommandPalette {
     floatingBtn?.addEventListener('click', () => {
       this.toggle();
     });
+
+    // Long press on floating button opens mobile action menu
+    if (floatingBtn) {
+      addLongPressHandlerDOM(floatingBtn, () => {
+        // Dynamically import to avoid circular dependency
+        import('./mobileActionMenu.js').then(({ mobileActionMenu }) => {
+          mobileActionMenu.open();
+        });
+
+        // Haptic feedback
+        if (navigator.vibrate) {
+          navigator.vibrate(50);
+        }
+      }, 500);
+    }
   }
 
   /**

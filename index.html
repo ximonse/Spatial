@@ -46,6 +46,26 @@
           <path d="m21 21-4.35-4.35"></path>
         </svg>
       </button>
+
+      <!-- Quick Actions Bar (shown when cards selected on mobile) -->
+      <div id="quick-actions-bar" class="quick-actions-bar">
+        <span class="quick-action-count">0 selected</span>
+        <button class="quick-action-btn" data-action="arrange">Arrange</button>
+        <button class="quick-action-btn" data-action="delete">Delete</button>
+        <button class="quick-action-btn" data-action="more">•••</button>
+      </div>
+
+      <!-- Mobile Action Menu -->
+      <div id="mobile-action-menu-backdrop" class="mobile-action-menu-backdrop"></div>
+      <div id="mobile-action-menu" class="mobile-action-menu">
+        <div class="mobile-action-menu-header">
+          <h3>Actions</h3>
+          <button class="mobile-action-menu-close">×</button>
+        </div>
+        <div class="mobile-action-menu-content">
+          <!-- Content populated by JS -->
+        </div>
+      </div>
     </div>
   </div>
 
