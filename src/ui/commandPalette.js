@@ -21,6 +21,7 @@ import { exportToJSON, importFromJSON } from '../io/jsonIO.js';
 import { createBackup, restoreBackup } from '../io/backup.js';
 import { multiImportFromText } from '../io/multiImport.js';
 import { showExportDialog } from '../io/textExport.js';
+import { importZoteroNotes } from '../io/zoteroImport.js';
 
 export class CommandPalette {
   constructor() {
@@ -129,6 +130,11 @@ export class CommandPalette {
         name: 'Export to Text',
         key: 'E',
         action: () => showExportDialog(),
+      },
+      {
+        name: 'Import from Zotero',
+        key: 'Z',
+        action: () => importZoteroNotes(),
       },
     ];
 

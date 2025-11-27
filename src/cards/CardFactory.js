@@ -24,6 +24,8 @@ export class CardFactory {
       x: options.x ?? 100,
       y: options.y ?? 100,
       content: options.content ?? '',
+      comments: options.comments ?? '',
+      backgroundColor: options.backgroundColor ?? null,
       tags: options.tags ?? [],
       pinned: options.pinned ?? false,
       metadata: options.metadata ?? {},

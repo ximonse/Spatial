@@ -19,6 +19,7 @@ export class TextCard {
     this.resizeObserver = null;
     this.heightUpdateTimeout = null;
     this.isSelected = false;
+    this.isSearchMatch = true; // Default to visible (no search active)
   }
 
   /**
@@ -36,10 +37,13 @@ export class TextCard {
     });
 
     // Background rectangle (dynamic height)
+    // Use custom backgroundColor if provided, otherwise use theme color
+    const fillColor = this.data.backgroundColor || theme.card;
+
     this.rect = new Konva.Rect({
       width: CARD.WIDTH,
       height: this.currentHeight,
-      fill: theme.card,
+      fill: fillColor,
       cornerRadius: CARD.CORNER_RADIUS,
     });
 
@@ -52,7 +56,8 @@ export class TextCard {
       this.data.x,
       this.data.y,
       this.currentHeight,
-      this.data.comments || ''
+      this.data.comments || '',
+      this.data.backgroundColor || null
     );
     this.contentOverlay.create();
 
@@ -100,6 +105,14 @@ export class TextCard {
   setSelected(isSelected) {
     this.isSelected = isSelected;
     this.contentOverlay.setSelected(isSelected);
+  }
+
+  /**
+   * Update search match visual
+   */
+  setSearchMatch(hasSearch, isMatch) {
+    this.isSearchMatch = !hasSearch || isMatch;
+    this.contentOverlay.setSearchMatch(hasSearch, isMatch);
   }
 
   /**

@@ -157,8 +157,9 @@ export class SpatialNoteApp {
       if (query.trim()) {
         this._highlightSearchMatches(query);
       } else {
-        // Clear selection if search is empty
+        // Clear selection and search results if search is empty
         state.clearSelection();
+        state.set('searchResults', []);
       }
     });
 
@@ -194,6 +195,18 @@ export class SpatialNoteApp {
       });
     });
 
+    // Update search match visuals when search results change
+    state.subscribe('searchResults', (searchResults) => {
+      const hasSearch = searchResults.length > 0;
+      const matchSet = new Set(searchResults);
+
+      const allCards = cardFactory.getAllCards();
+      allCards.forEach(card => {
+        const isMatch = matchSet.has(card.data.id);
+        card.setSearchMatch(hasSearch, isMatch);
+      });
+    });
+
     // Update zoom indicator
     state.subscribe('zoom', (zoom) => {
       const indicator = document.getElementById('zoom-indicator');
@@ -209,6 +222,9 @@ export class SpatialNoteApp {
   _highlightSearchMatches(query) {
     const cards = state.get('cards');
     const matchingIds = searchCards(cards, query);
+
+    // Save search results to state
+    state.set('searchResults', Array.from(matchingIds));
 
     // Clear current selection
     state.clearSelection();

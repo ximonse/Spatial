@@ -9,16 +9,18 @@ import { stageManager } from '../core/stage.js';
 import { state } from '../core/state.js';
 
 export class CardContentOverlay {
-  constructor(cardId, content, initialX, initialY, initialHeight, comments = '') {
+  constructor(cardId, content, initialX, initialY, initialHeight, comments = '', backgroundColor = null) {
     this.cardId = cardId;
     this.content = content;
     this.comments = comments;
+    this.backgroundColor = backgroundColor;
     this.x = initialX;
     this.y = initialY;
     this.height = initialHeight || CARD.MIN_HEIGHT;
     this.element = null;
     this.visible = true;
     this.selected = false;
+    this.isSearchMatch = true; // Default to visible
   }
 
   /**
@@ -96,6 +98,9 @@ export class CardContentOverlay {
     const screenX = this.x * scale + stagePos.x;
     const screenY = this.y * scale + stagePos.y;
 
+    // Use custom backgroundColor if provided, otherwise use theme color
+    const bgColor = this.backgroundColor || theme.card;
+
     this.element.style.cssText = `
       position: absolute;
       left: ${screenX}px;
@@ -109,11 +114,11 @@ export class CardContentOverlay {
       font-size: ${14 * scale}px;
       line-height: 1.5;
       color: ${theme.text};
-      background: ${theme.card};
+      background: ${bgColor};
       border: ${(this.selected ? 3 : 2) * scale}px solid ${this.selected ? (theme.borderSelected || theme.border) : theme.border};
       border-radius: ${CARD.CORNER_RADIUS * scale}px;
-      opacity: ${this.visible ? 1 : 0};
-      transition: opacity 0.15s, border-width 0.1s;
+      opacity: ${this.visible ? (this.isSearchMatch ? 1 : 0.3) : 0};
+      transition: opacity 0.2s, border-width 0.1s;
     `;
   }
 
@@ -147,6 +152,14 @@ export class CardContentOverlay {
    */
   setSelected(selected) {
     this.selected = selected;
+    this.updatePosition();
+  }
+
+  /**
+   * Set search match state
+   */
+  setSearchMatch(hasSearch, isMatch) {
+    this.isSearchMatch = !hasSearch || isMatch;
     this.updatePosition();
   }
 
