@@ -36,11 +36,14 @@ export async function applyPositionsToCards(positionMap) {
   const updates = [];
 
   for (const [cardId, pos] of Object.entries(positionMap)) {
-    const card = cardFactory.getCard(cardId);
+    // Convert cardId to number (Object.entries returns string keys)
+    const numericId = Number(cardId);
+
+    const card = cardFactory.getCard(numericId);
     if (!card) continue;
 
     // Find card data in state
-    const cardData = state.get('cards').find(c => c.id === cardId);
+    const cardData = state.get('cards').find(c => c.id === numericId);
     if (!cardData) continue;
 
     // Update card position
@@ -48,7 +51,7 @@ export async function applyPositionsToCards(positionMap) {
     cardData.x = pos.x;
     cardData.y = pos.y;
 
-    updates.push({ id: cardId, x: pos.x, y: pos.y });
+    updates.push({ id: numericId, x: pos.x, y: pos.y });
   }
 
   // Batch save to database

@@ -6,7 +6,7 @@
 // Card dimensions (A7 index cards: 74×105mm ratio = 1:1.42)
 export const CARD = {
   WIDTH: 200,
-  MIN_HEIGHT: 80,  // Small minimum - cards adjust to content
+  MIN_HEIGHT: 150,  // Minimum height (landscape A7-inspired)
   MAX_HEIGHT: Infinity,  // Cards with content can grow infinitely
   CORNER_RADIUS: 8,
   PADDING: 12,
@@ -17,7 +17,7 @@ export const SPACING = {
   SAME_GROUP: 15,      // 13-20px = same group
   DIFFERENT_GROUP: 250, // 200-300px = different groups
   GRID_HORIZONTAL: 215, // CARD.WIDTH + SAME_GROUP (200 + 15)
-  GRID_VERTICAL: 95,    // CARD.MIN_HEIGHT + SAME_GROUP (80 + 15)
+  GRID_VERTICAL: 165,   // CARD.MIN_HEIGHT + SAME_GROUP (150 + 15)
 };
 
 // Colors
