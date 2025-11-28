@@ -167,16 +167,36 @@ class AssistantOrchestrator {
 
         if (response.ok) {
           const data = await response.json();
-          return {
-            text: data.candidates[0].content.parts[0].text,
-          };
+          const candidate = data.candidates?.[0];
+          const textPart = candidate?.content?.parts?.find(part => part.text)?.text;
+
+          if (textPart) {
+            return { text: textPart };
+          }
+
+          const finishReason = candidate?.finishReason;
+          const blockReason = data.promptFeedback?.blockReason;
+          const safetyReasons = data.promptFeedback?.safetyRatings
+            ?.map(rating => rating.category)
+            ?.join(', ');
+
+          const reason = blockReason || finishReason || 'okänt skäl';
+          throw new Error(
+            `Gemini svar saknar text (${version}/${model}) — orsak: ${reason}${safetyReasons ? `, säkerhet: ${safetyReasons}` : ''}`
+          );
         }
 
         const error = await response.json().catch(() => ({ error: { message: response.statusText } }));
         lastError = error.error?.message || response.statusText;
 
-        // If the model isn't found, try the next candidate; otherwise surface the error immediately
-        if (response.status !== 404) {
+        const message = lastError.toLowerCase();
+        const isMissingModel =
+          response.status === 404 ||
+          message.includes('not found') ||
+          message.includes('not supported for generatecontent');
+
+        // If the model isn't found or supported, try the next candidate; otherwise surface the error immediately
+        if (!isMissingModel) {
           throw new Error(`Gemini API error (${version}/${model}): ${lastError}`);
         }
       }
