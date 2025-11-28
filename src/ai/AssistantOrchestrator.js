@@ -131,7 +131,6 @@ class AssistantOrchestrator {
    */
   async callGemini(apiKey, userMessage, context, intent) {
     const systemPrompt = this.buildSystemPrompt(intent);
-
     const prompt = `${systemPrompt}\n\n${context}\n\n---\n\nFråga: ${userMessage}`;
 
     // Try a small matrix of versions/models to avoid merge-conflict style regressions when
@@ -206,6 +205,9 @@ class AssistantOrchestrator {
 
         lastError = error.error?.message || response.statusText;
         attemptErrors.push(`${version}/${model}: ${lastError} (status: ${response.status})`);
+        const error = await response.json().catch(() => ({ error: { message: response.statusText } }));
+        lastError = error.error?.message || response.statusText;
+        attemptErrors.push(`${version}/${model}: ${lastError}`);
 
         const message = lastError.toLowerCase();
         const isMissingModel =
@@ -316,34 +318,4 @@ DIN UPPGIFT:
     const idPattern = /\[([a-zA-Z0-9-]+)\]/g;
     let match;
 
-    while ((match = idPattern.exec(text)) !== null) {
-      const shortId = match[1];
-      // Find full card ID that starts with this short ID
-      const card = cards.find(c => c.id.startsWith(shortId));
-      if (card && !references.includes(card.id)) {
-        references.push(card.id);
-      }
-    }
-
-    return references;
-  }
-
-  /**
-   * Clear conversation history
-   */
-  clearHistory() {
-    this.conversationHistory = [];
-    console.log('🗑️ Conversation history cleared');
-  }
-
-  /**
-   * Get conversation history
-   * @returns {Array} - Conversation history
-   */
-  getHistory() {
-    return this.conversationHistory;
-  }
-}
-
-// Export singleton instance
-export const assistantOrchestrator = new AssistantOrchestrator();
+    while ((match = idPattern.exec(text
