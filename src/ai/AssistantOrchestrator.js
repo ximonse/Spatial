@@ -134,6 +134,8 @@ class AssistantOrchestrator {
 
     const prompt = `${systemPrompt}\n\n${context}\n\n---\n\nFråga: ${userMessage}`;
 
+    // Try a small matrix of versions/models to avoid merge-conflict style regressions when
+    // upstream API availability shifts (e.g. "model not found" for the latest flash SKU).
     const candidateEndpoints = [
       { version: 'v1', models: ['gemini-1.5-flash-latest', 'gemini-1.5-pro-latest', 'gemini-1.5-flash', 'gemini-1.0-pro'] },
       { version: 'v1beta', models: ['gemini-1.5-flash-latest', 'gemini-1.5-pro-latest', 'gemini-1.5-flash', 'gemini-1.0-pro'] },
