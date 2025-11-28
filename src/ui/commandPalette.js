@@ -215,6 +215,12 @@ export class CommandPalette {
         this.toggle();
       }
     });
+
+    // Floating command button
+    const floatingBtn = document.getElementById('floating-command-btn');
+    floatingBtn?.addEventListener('click', () => {
+      this.toggle();
+    });
   }
 
   /**

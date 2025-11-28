@@ -737,3 +737,38 @@ body {
   background: #F3F4F6;
   border-color: #9CA3AF;
 }
+
+/* Floating Command Button */
+.floating-command-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #111827;
+  color: white;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.floating-command-btn:hover {
+  background: #374151;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+  transform: scale(1.05);
+}
+
+.floating-command-btn:active {
+  transform: scale(0.95);
+}
+
+.floating-command-btn svg {
+  width: 24px;
+  height: 24px;
+}
