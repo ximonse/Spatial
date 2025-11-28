@@ -10,6 +10,10 @@ class AssistantOrchestrator {
   constructor() {
     this.conversationHistory = [];
     this.maxHistoryLength = 10; // Keep last 10 exchanges
+    this.corsProxies = [
+      'https://corsproxy.io/?',
+      'https://thingproxy.freeboard.io/fetch/',
+    ];
   }
 
   /**
@@ -91,7 +95,7 @@ class AssistantOrchestrator {
       },
     ];
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await this.fetchWithCorsFallback('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -131,7 +135,7 @@ class AssistantOrchestrator {
     const prompt = `${systemPrompt}\n\n${context}\n\n---\n\nFråga: ${userMessage}`;
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: {
@@ -160,6 +164,42 @@ class AssistantOrchestrator {
     return {
       text: data.candidates[0].content.parts[0].text,
     };
+  }
+
+  /**
+   * Fetch helper that retries via public CORS proxies when the direct call fails
+   * (e.g. browser blocks cross-origin requests to Anthropic).
+   * @param {string} url - Target URL
+   * @param {RequestInit} options - Fetch options
+   * @returns {Promise<Response>} - Successful response
+   */
+  async fetchWithCorsFallback(url, options) {
+    try {
+      return await fetch(url, options);
+    } catch (error) {
+      console.warn('Direct fetch failed, trying CORS proxies...', error);
+    }
+
+    let lastError = null;
+
+    for (const proxy of this.corsProxies) {
+      try {
+        const proxiedUrl = `${proxy}${url}`;
+        const response = await fetch(proxiedUrl, options);
+        if (response.ok) {
+          console.warn(`CORS fallback activated via ${proxy}`);
+          return response;
+        }
+
+        const errorText = await response.text();
+        console.warn(`Proxy ${proxy} responded with status ${response.status}: ${errorText}`);
+      } catch (proxyError) {
+        lastError = proxyError;
+        console.warn(`Proxy ${proxy} failed:`, proxyError);
+      }
+    }
+
+    throw new Error(`Nätverksfel eller CORS-blockad mot ${url}. ${lastError ? lastError.message : 'Ingen proxy fungerade.'}`);
   }
 
   /**
