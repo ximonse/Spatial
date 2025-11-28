@@ -198,6 +198,13 @@ class AssistantOrchestrator {
           continue;
         }
 
+        const contentType = response.headers.get('content-type') || '';
+        const error = contentType.includes('application/json')
+          ? await response.json().catch(() => ({ error: { message: response.statusText } }))
+          : { error: { message: await response.text().catch(() => response.statusText) } };
+
+        lastError = error.error?.message || response.statusText;
+        attemptErrors.push(`${version}/${model}: ${lastError} (status: ${response.status})`);
         const error = await response.json().catch(() => ({ error: { message: response.statusText } }));
         lastError = error.error?.message || response.statusText;
         attemptErrors.push(`${version}/${model}: ${lastError}`);
