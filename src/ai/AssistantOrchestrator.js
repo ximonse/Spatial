@@ -134,18 +134,20 @@ class AssistantOrchestrator {
 
     const prompt = `${systemPrompt}\n\n${context}\n\n---\n\nFråga: ${userMessage}`;
 
-    const candidateModels = [
-      'gemini-1.5-flash-latest',
-      'gemini-1.5-flash',
-      'gemini-1.0-pro',
+    const candidateEndpoints = [
+      { version: 'v1', models: ['gemini-1.5-flash-latest', 'gemini-1.5-flash', 'gemini-1.0-pro'] },
+      { version: 'v1beta', models: ['gemini-1.5-flash-latest', 'gemini-1.5-flash', 'gemini-1.0-pro'] },
     ];
 
     let lastError = null;
+    const tried = [];
 
-    for (const model of candidateModels) {
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-        {
+    for (const { version, models } of candidateEndpoints) {
+      for (const model of models) {
+        const url = `https://generativelanguage.googleapis.com/${version}/models/${model}:generateContent?key=${apiKey}`;
+        tried.push(`${version}/${model}`);
+
+        const response = await fetch(url, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -161,27 +163,27 @@ class AssistantOrchestrator {
               maxOutputTokens: 2000,
             },
           }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          return {
+            text: data.candidates[0].content.parts[0].text,
+          };
         }
-      );
 
-      if (response.ok) {
-        const data = await response.json();
-        return {
-          text: data.candidates[0].content.parts[0].text,
-        };
-      }
+        const error = await response.json().catch(() => ({ error: { message: response.statusText } }));
+        lastError = error.error?.message || response.statusText;
 
-      const error = await response.json().catch(() => ({ error: { message: response.statusText } }));
-      lastError = error.error?.message || response.statusText;
-
-      // If the model isn't found, try the next candidate; otherwise surface the error immediately
-      if (response.status !== 404) {
-        throw new Error(`Gemini API error (${model}): ${lastError}`);
+        // If the model isn't found, try the next candidate; otherwise surface the error immediately
+        if (response.status !== 404) {
+          throw new Error(`Gemini API error (${version}/${model}): ${lastError}`);
+        }
       }
     }
 
     throw new Error(
-      `Gemini API error: ${lastError || 'Okänd modell'} (försökte modeller: ${candidateModels.join(', ')})`
+      `Gemini API error: ${lastError || 'Okänd modell'} (försökte modeller: ${tried.join(', ')})`
     );
   }
 
