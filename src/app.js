@@ -34,6 +34,8 @@ import {
   createNewCard
 } from './ui/cardOperations.js';
 import { setupKeyboardShortcuts } from './ui/keyboardShortcuts.js';
+import { chatPanel } from './ui/ChatPanel.js';
+import { settingsPanel } from './ui/SettingsPanel.js';
 
 export class SpatialNoteApp {
   constructor() {
@@ -86,6 +88,11 @@ export class SpatialNoteApp {
     // Initialize viewport culler if needed
     viewportCuller.checkThreshold();
     console.log('✅ Viewport culler ready');
+
+    // Initialize AI chat and settings panels
+    // (They auto-initialize on import, just log confirmation)
+    console.log('✅ AI chat panel ready');
+    console.log('✅ Settings panel ready');
 
     // Restore saved view
     const savedView = await db.getSetting('currentView', 'board');
@@ -221,6 +228,36 @@ export class SpatialNoteApp {
     matchingIds.forEach(id => {
       state.selectCard(id);
     });
+  }
+
+  /**
+   * Toggle between board and column view
+   */
+  async toggleView() {
+    const currentView = state.get('currentView');
+    const newView = currentView === 'board' ? 'column' : 'board';
+    state.set('currentView', newView);
+
+    // Save to database
+    import('./core/db.js').then(({ db }) => {
+      db.saveSetting('currentView', newView);
+    });
+
+    console.log(`📋 Switched to ${newView} view`);
+  }
+
+  /**
+   * Toggle AI chat panel
+   */
+  toggleChat() {
+    chatPanel.toggle();
+  }
+
+  /**
+   * Open settings panel
+   */
+  openSettings() {
+    settingsPanel.open();
   }
 
   /**

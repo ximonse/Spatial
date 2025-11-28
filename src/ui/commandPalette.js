@@ -23,6 +23,8 @@ import { multiImportFromText } from '../io/multiImport.js';
 import { showExportDialog } from '../io/textExport.js';
 import { importZoteroNotes } from '../io/zoteroImport.js';
 import { importImage } from '../io/imageImport.js';
+import { chatPanel } from './ChatPanel.js';
+import { settingsPanel } from './SettingsPanel.js';
 
 export class CommandPalette {
   constructor() {
@@ -160,6 +162,31 @@ export class CommandPalette {
         name: 'Import from Zotero',
         key: 'Z',
         action: () => importZoteroNotes(),
+      },
+      {
+        icon: '📋',
+        name: 'Toggle View (Board/Column)',
+        key: 'K',
+        action: () => {
+          const currentView = state.get('currentView');
+          const newView = currentView === 'board' ? 'column' : 'board';
+          state.set('currentView', newView);
+          import('../core/db.js').then(({ db }) => {
+            db.saveSetting('currentView', newView);
+          });
+        },
+      },
+      {
+        icon: '🤖',
+        name: 'AI Chat Assistant',
+        key: 'A',
+        action: () => chatPanel.toggle(),
+      },
+      {
+        icon: '⚙️',
+        name: 'Settings (API Keys)',
+        key: '',
+        action: () => settingsPanel.open(),
       },
     ];
 

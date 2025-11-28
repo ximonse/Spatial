@@ -26,6 +26,7 @@ import { createBackup, restoreBackup } from '../io/backup.js';
 import { multiImportFromText } from '../io/multiImport.js';
 import { showExportDialog } from '../io/textExport.js';
 import { importImage } from '../io/imageImport.js';
+import { chatPanel } from './ChatPanel.js';
 
 /**
  * Setup keyboard shortcuts
@@ -86,6 +87,10 @@ export function setupKeyboardShortcuts(app) {
         arrangeCircle();
         break;
 
+      case 'k':
+        app.toggleView();
+        break;
+
       case 'escape':
         // Blur any active input/textarea
         if (document.activeElement &&
@@ -107,6 +112,8 @@ export function setupKeyboardShortcuts(app) {
         if (e.ctrlKey || e.metaKey) {
           e.preventDefault();
           state.selectAll();
+        } else {
+          chatPanel.toggle();
         }
         break;
 
