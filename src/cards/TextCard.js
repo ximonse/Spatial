@@ -45,6 +45,8 @@ export class TextCard {
       height: this.currentHeight,
       fill: fillColor,
       cornerRadius: CARD.CORNER_RADIUS,
+      stroke: '#9CA3AF',
+      strokeWidth: 1,
     });
 
     this.group.add(this.rect);
@@ -104,6 +106,16 @@ export class TextCard {
    */
   setSelected(isSelected) {
     this.isSelected = isSelected;
+
+    // Update Konva rect border color
+    const theme = state.get('theme');
+    const strokeColor = isSelected ? (theme.borderSelected || theme.border) : theme.border;
+    if (this.rect) {
+      this.rect.stroke(strokeColor);
+      this.rect.getLayer()?.batchDraw();
+    }
+
+    // Update overlay
     this.contentOverlay.setSelected(isSelected);
   }
 

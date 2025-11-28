@@ -13,6 +13,7 @@ class BoxSelection {
     this.selectionBox = null;
     this.startPoint = null;
     this.selectionLayer = null;
+    this.ctrlWasHeld = false; // Track if Ctrl was held at start
   }
 
   /**
@@ -51,7 +52,13 @@ class BoxSelection {
       // Only start if clicking on stage itself (not on a card)
       if (e.target !== stage) return;
 
-      // Disable stage dragging during selection
+      // Only activate box selection if Ctrl is held
+      if (!e.evt.ctrlKey) return;
+
+      // Remember that Ctrl was held when selection started
+      this.ctrlWasHeld = true;
+
+      // Disable stage dragging during box selection
       stage.draggable(false);
 
       this.isSelecting = true;
@@ -107,7 +114,7 @@ class BoxSelection {
     });
 
     // Mouse up - finalize selection
-    stage.on('mouseup', () => {
+    stage.on('mouseup', (e) => {
       if (!this.isSelecting) return;
 
       this.isSelecting = false;
@@ -118,15 +125,18 @@ class BoxSelection {
       // Get all cards that intersect with selection box
       const selectedCards = this._getIntersectingCards();
 
-      // Update selection state
-      state.clearSelection();
+      // Since we only start selection with Ctrl held, always add to existing selection
+      // (Don't clear selection - this allows multiple Ctrl+drags to accumulate)
       selectedCards.forEach(cardData => {
-        state.addToSelection(cardData.id);
+        state.selectCard(cardData.id);
       });
 
       // Hide selection box
       this.selectionBox.visible(false);
       this.selectionLayer.batchDraw();
+
+      // Reset flag
+      this.ctrlWasHeld = false;
     });
 
     // Mouse leave - cancel selection if dragging outside stage

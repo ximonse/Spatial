@@ -14,6 +14,8 @@ import { columnView } from './ui/columnView.js';
 import { statusNotification } from './ui/statusNotification.js';
 import { boxSelection } from './ui/boxSelection.js';
 import { searchCards } from './utils/search.js';
+import { viewportCuller } from './performance/ViewportCuller.js';
+import { setStatusCallback } from './io/imageImport.js';
 import {
   arrangeVertical,
   arrangeHorizontal,
@@ -76,6 +78,15 @@ export class SpatialNoteApp {
     statusNotification.init();
     console.log('✅ Status notification initialized');
 
+    // Connect image import to status notification
+    setStatusCallback((message, type) => {
+      statusNotification.showTemporary(message, 3000);
+    });
+
+    // Initialize viewport culler if needed
+    viewportCuller.checkThreshold();
+    console.log('✅ Viewport culler ready');
+
     // Restore saved view
     const savedView = await db.getSetting('currentView', 'board');
     state.set('currentView', savedView);
@@ -99,34 +110,11 @@ export class SpatialNoteApp {
    * Setup UI event listeners
    */
   _setupUI() {
-    // New card button
-    const btnNewCard = document.getElementById('btn-new-card');
-    btnNewCard?.addEventListener('click', () => {
-      createNewCard();
+    // Command palette button
+    const btnCommandPalette = document.getElementById('btn-command-palette');
+    btnCommandPalette?.addEventListener('click', () => {
+      commandPalette.toggle();
     });
-
-    // Toggle view button
-    const btnToggleView = document.getElementById('btn-toggle-view');
-    const toolbarSort = document.getElementById('toolbar-sort');
-
-    const updateViewButton = () => {
-      const currentView = state.get('currentView');
-      btnToggleView.textContent = currentView === 'board' ? 'Board View' : 'Column View';
-
-      // Show/hide sort dropdown based on view
-      if (currentView === 'column') {
-        toolbarSort?.classList.remove('hidden');
-      } else {
-        toolbarSort?.classList.add('hidden');
-      }
-    };
-
-    btnToggleView?.addEventListener('click', () => {
-      this.toggleView();
-    });
-
-    updateViewButton();
-    state.subscribe('currentView', updateViewButton);
 
     // Toolbar collapse/expand
     const toolbarToggle = document.getElementById('toolbar-toggle');
@@ -233,23 +221,6 @@ export class SpatialNoteApp {
     matchingIds.forEach(id => {
       state.selectCard(id);
     });
-  }
-
-
-  /**
-   * Toggle between board and column view
-   */
-  async toggleView() {
-    const currentView = state.get('currentView');
-    const newView = currentView === 'board' ? 'column' : 'board';
-    state.set('currentView', newView);
-
-    // Save to database
-    import('./core/db.js').then(({ db }) => {
-      db.saveSetting('currentView', newView);
-    });
-
-    console.log(`📋 Switched to ${newView} view`);
   }
 
   /**

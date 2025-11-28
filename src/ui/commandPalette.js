@@ -22,6 +22,7 @@ import { createBackup, restoreBackup } from '../io/backup.js';
 import { multiImportFromText } from '../io/multiImport.js';
 import { showExportDialog } from '../io/textExport.js';
 import { importZoteroNotes } from '../io/zoteroImport.js';
+import { importImage } from '../io/imageImport.js';
 
 export class CommandPalette {
   constructor() {
@@ -47,91 +48,115 @@ export class CommandPalette {
   _setupCommands() {
     this.commands = [
       {
+        icon: '📝',
         name: 'New Card',
         key: 'N',
         action: () => createNewCard(),
       },
       {
+        icon: '↕️',
         name: 'Arrange Vertical',
         key: 'V',
         action: () => arrangeVertical(),
       },
       {
+        icon: '↔️',
         name: 'Arrange Horizontal',
         key: 'H',
         action: () => arrangeHorizontal(),
       },
       {
+        icon: '▦',
         name: 'Arrange Grid',
         key: 'G',
         action: () => arrangeGrid(),
       },
       {
+        icon: '⭕',
         name: 'Arrange Circle',
         key: 'Q',
         action: () => arrangeCircle(),
       },
       {
+        icon: '⬇️',
         name: 'Arrange Grid Vertical',
         key: 'G+V',
         action: () => arrangeGridVertical(),
       },
       {
+        icon: '➡️',
         name: 'Arrange Grid Horizontal',
         key: 'G+H',
         action: () => arrangeGridHorizontal(),
       },
       {
+        icon: '📊',
         name: 'Arrange Kanban',
         key: 'G+T',
         action: () => arrangeKanban(),
       },
       {
+        icon: '☑️',
         name: 'Select All',
         key: 'Ctrl+A',
         action: () => state.selectAll(),
       },
       {
+        icon: '❌',
         name: 'Clear Selection',
         key: 'Esc',
         action: () => state.clearSelection(),
       },
       {
+        icon: '🗑️',
         name: 'Delete Selected',
         key: 'Del',
         action: () => deleteSelectedCards(),
       },
       {
+        icon: '💾',
         name: 'Export to JSON',
         key: 'S',
         action: () => exportToJSON(),
       },
       {
+        icon: '📥',
         name: 'Import from JSON',
         key: 'L',
         action: () => importFromJSON(),
       },
       {
+        icon: '🗜️',
         name: 'Create Backup (ZIP)',
         key: 'B',
         action: () => createBackup(),
       },
       {
+        icon: '📦',
         name: 'Restore from Backup',
         key: 'R',
         action: () => restoreBackup(),
       },
       {
+        icon: '📋',
         name: 'Multi-Import from Text',
         key: 'M',
         action: () => multiImportFromText(),
       },
       {
+        icon: '🖼️',
+        name: 'Import Image',
+        key: 'I',
+        action: () => importImage(),
+      },
+      {
+        icon: '📤',
         name: 'Export to Text',
         key: 'E',
         action: () => showExportDialog(),
       },
       {
+        icon: '📚',
         name: 'Import from Zotero',
         key: 'Z',
         action: () => importZoteroNotes(),
@@ -216,6 +241,7 @@ export class CommandPalette {
         const selected = index === this.selectedIndex ? ' selected' : '';
         return `
           <div class="command-item${selected}" data-index="${index}">
+            <span class="command-icon">${cmd.icon}</span>
             <span class="command-name">${cmd.name}</span>
             <span class="command-key">${cmd.key}</span>
           </div>

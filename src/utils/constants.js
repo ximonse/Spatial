@@ -8,7 +8,7 @@ export const CARD = {
   WIDTH: 200,
   MIN_HEIGHT: 150,  // Minimum height (landscape A7-inspired)
   MAX_HEIGHT: Infinity,  // Cards with content can grow infinitely
-  CORNER_RADIUS: 8,
+  CORNER_RADIUS: 3,
   PADDING: 12,
 };
 

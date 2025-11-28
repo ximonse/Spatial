@@ -25,6 +25,7 @@ import { exportToJSON, importFromJSON } from '../io/jsonIO.js';
 import { createBackup, restoreBackup } from '../io/backup.js';
 import { multiImportFromText } from '../io/multiImport.js';
 import { showExportDialog } from '../io/textExport.js';
+import { importImage } from '../io/imageImport.js';
 
 /**
  * Setup keyboard shortcuts
@@ -83,10 +84,6 @@ export function setupKeyboardShortcuts(app) {
 
       case 'q':
         arrangeCircle();
-        break;
-
-      case 'k':
-        app.toggleView();
         break;
 
       case 'escape':
@@ -164,6 +161,12 @@ export function setupKeyboardShortcuts(app) {
       case 'e':
         if (!e.ctrlKey && !e.metaKey) {
           showExportDialog();
+        }
+        break;
+
+      case 'i':
+        if (!e.ctrlKey && !e.metaKey) {
+          importImage();
         }
         break;
 

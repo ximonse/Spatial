@@ -4,6 +4,7 @@
  */
 
 import { TextCard } from './TextCard.js';
+import { ImageCard } from './ImageCard.js';
 import { CARD_TYPES } from '../utils/constants.js';
 import { state } from '../core/state.js';
 import { stageManager } from '../core/stage.js';
@@ -37,8 +38,8 @@ export class CardFactory {
     // Create card instance
     const card = this._instantiateCard(savedCard);
 
-    // Add to stage
-    const group = card.create();
+    // Add to stage (await for async ImageCard.create())
+    const group = await card.create();
     stageManager.getCardLayer().add(group);
     stageManager.getCardLayer().batchDraw();
 
@@ -54,9 +55,9 @@ export class CardFactory {
   /**
    * Load card from database
    */
-  loadCard(cardData) {
+  async loadCard(cardData) {
     const card = this._instantiateCard(cardData);
-    const group = card.create();
+    const group = await card.create();
 
     stageManager.getCardLayer().add(group);
 
@@ -74,8 +75,7 @@ export class CardFactory {
       case CARD_TYPES.TEXT:
         return new TextCard(cardData);
       case CARD_TYPES.IMAGE:
-        // TODO: ImageCard
-        throw new Error('ImageCard not implemented yet');
+        return new ImageCard(cardData);
       default:
         throw new Error(`Unknown card type: ${cardData.type}`);
     }
@@ -153,9 +153,8 @@ export class CardFactory {
   async loadAllCards() {
     const cards = await db.getAllCards();
 
-    cards.forEach(cardData => {
-      this.loadCard(cardData);
-    });
+    // Load all cards in parallel for better performance
+    await Promise.all(cards.map(cardData => this.loadCard(cardData)));
 
     stageManager.getCardLayer().batchDraw();
 
