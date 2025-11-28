@@ -135,35 +135,43 @@ class AssistantOrchestrator {
     const prompt = `${systemPrompt}\n\n${context}\n\n---\n\nFråga: ${userMessage}`;
 
     const candidateEndpoints = [
-      { version: 'v1', models: ['gemini-1.5-flash-latest', 'gemini-1.5-flash', 'gemini-1.0-pro'] },
-      { version: 'v1beta', models: ['gemini-1.5-flash-latest', 'gemini-1.5-flash', 'gemini-1.0-pro'] },
+      { version: 'v1', models: ['gemini-1.5-flash-latest', 'gemini-1.5-pro-latest', 'gemini-1.5-flash', 'gemini-1.0-pro'] },
+      { version: 'v1beta', models: ['gemini-1.5-flash-latest', 'gemini-1.5-pro-latest', 'gemini-1.5-flash', 'gemini-1.0-pro'] },
     ];
 
     let lastError = null;
     const tried = [];
+    const attemptErrors = [];
 
     for (const { version, models } of candidateEndpoints) {
       for (const model of models) {
         const url = `https://generativelanguage.googleapis.com/${version}/models/${model}:generateContent?key=${apiKey}`;
         tried.push(`${version}/${model}`);
 
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            contents: [{
-              parts: [{
-                text: prompt,
-              }],
-            }],
-            generationConfig: {
-              temperature: 0.7,
-              maxOutputTokens: 2000,
+        let response;
+        try {
+          response = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
             },
-          }),
-        });
+            body: JSON.stringify({
+              contents: [{
+                parts: [{
+                  text: prompt,
+                }],
+              }],
+              generationConfig: {
+                temperature: 0.7,
+                maxOutputTokens: 2000,
+              },
+            }),
+          });
+        } catch (fetchError) {
+          lastError = fetchError.message || String(fetchError);
+          attemptErrors.push(`${version}/${model}: ${lastError}`);
+          continue;
+        }
 
         if (response.ok) {
           const data = await response.json();
@@ -180,14 +188,18 @@ class AssistantOrchestrator {
             ?.map(rating => rating.category)
             ?.join(', ');
 
-          const reason = blockReason || finishReason || 'okänt skäl';
-          throw new Error(
-            `Gemini svar saknar text (${version}/${model}) — orsak: ${reason}${safetyReasons ? `, säkerhet: ${safetyReasons}` : ''}`
-          );
+          const reasonParts = [blockReason, finishReason, safetyReasons && `säkerhet: ${safetyReasons}`]
+            .filter(Boolean)
+            .join(' | ');
+
+          lastError = `svar saknar text (${reasonParts || 'okänt skäl'})`;
+          attemptErrors.push(`${version}/${model}: ${lastError}`);
+          continue;
         }
 
         const error = await response.json().catch(() => ({ error: { message: response.statusText } }));
         lastError = error.error?.message || response.statusText;
+        attemptErrors.push(`${version}/${model}: ${lastError}`);
 
         const message = lastError.toLowerCase();
         const isMissingModel =
@@ -203,7 +215,9 @@ class AssistantOrchestrator {
     }
 
     throw new Error(
-      `Gemini API error: ${lastError || 'Okänd modell'} (försökte modeller: ${tried.join(', ')})`
+      `Gemini API error: ${lastError || 'Okänd modell'} (försökte modeller: ${tried.join(', ')})${
+        attemptErrors.length ? ` | fel: ${attemptErrors.join(' | ')}` : ''
+      }`
     );
   }
 
