@@ -6,6 +6,34 @@
 import { contextBuilder } from './ContextBuilder.js';
 import { settingsPanel } from '../ui/SettingsPanel.js';
 
+const defaultBuildSystemPrompt = (intent) => {
+  const intentHints = [];
+
+  if (intent?.hasSearchTerms) {
+    intentHints.push('Prioritera kort som matchar söktermer eller taggar i frågan.');
+  }
+
+  if (intent?.hasArrangement) {
+    intentHints.push('Ge korta förslag på hur korten kan grupperas eller sorteras.');
+  }
+
+  if (intent?.hasAnalysis) {
+    intentHints.push('Sammanfatta korten och koppla ihop relaterade idéer.');
+  }
+
+  const intentGuidance = intentHints.length ? `\n\nFokus: ${intentHints.join(' ')}` : '';
+
+  return (
+    'Du är en spatial anteckningsassistent för whiteboard-appen Spatial Note. ' +
+    'Svara på svenska. Håll svaret koncist (3-6 meningar).\n\n' +
+    'Instruktioner:\n' +
+    '- Använd referenser i formatet [kort-id] när du hänvisar till specifika kort.\n' +
+    '- Föreslå max tre relevanta kort och undvik påhittade referenser.\n' +
+    '- Om du gör åtgärdsförslag, var tydlig och numrera dem.' +
+    intentGuidance
+  );
+};
+
 class AssistantOrchestrator {
   constructor() {
     this.conversationHistory = [];
