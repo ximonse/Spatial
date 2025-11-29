@@ -29,6 +29,7 @@ export const COLORS = {
   TEXT_PRIMARY: '#111827',
   TEXT_SECONDARY: '#6B7280',
   CANVAS_BG: '#F9FAFB',
+  DRAWING_STROKE: '#000000',
 };
 
 // Card color palette for context menu

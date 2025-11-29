@@ -45,6 +45,10 @@ class StageManager {
     this.cardLayer = new Konva.Layer();
     this.stage.add(this.cardLayer);
 
+    // Drawing layer
+    this.drawingLayer = new Konva.Layer();
+    this.stage.add(this.drawingLayer);
+
     // Setup zoom/pan
     this._setupZoomPan();
 
@@ -165,6 +169,13 @@ class StageManager {
    */
   getCardLayer() {
     return this.cardLayer;
+  }
+
+  /**
+   * Get drawing layer
+   */
+  getDrawingLayer() {
+    return this.drawingLayer;
   }
 
   /**
