@@ -148,7 +148,10 @@ export class SpatialNoteApp {
       return;
     }
 
-    const nodes = targetIds.map(id => cardFactory.getCardNodeById(id)).filter(Boolean);
+    const nodes = targetIds.map(id => {
+      const card = cardFactory.getCard(id);
+      return card ? card.getGroup() : null;
+    }).filter(Boolean);
     stageManager.zoomToFit(nodes);
   }
 
