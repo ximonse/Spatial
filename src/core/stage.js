@@ -6,6 +6,7 @@
 import Konva from 'konva';
 import { ZOOM, COLORS } from '../utils/constants.js';
 import { state } from './state.js';
+import { overlayManager } from '../cards/overlayManager.js';
 
 class StageManager {
   constructor() {
@@ -236,6 +237,9 @@ class StageManager {
       scaleY: newScale,
       duration: 0.3,
       easing: Konva.Easings.EaseInOut,
+      onUpdate: () => {
+        overlayManager.updateAllOverlays();
+      },
     });
 
     state.set('zoom', newScale);
