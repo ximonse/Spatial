@@ -24,6 +24,10 @@ class AssistantOrchestrator {
         buildUrl: (targetUrl) => `https://cors.isomorphic-git.org/${targetUrl}`,
       },
     ];
+
+    // Ensure the system prompt builder is always an instance method (even if monkey-patched)
+    // so runtime hooks can't strip the function and cause "is not a function" errors.
+    this.buildSystemPrompt = this.buildSystemPrompt.bind(this);
   }
 
   /**
