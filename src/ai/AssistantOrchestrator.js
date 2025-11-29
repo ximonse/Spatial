@@ -53,26 +53,9 @@ class AssistantOrchestrator {
       },
     ];
 
-    // Capture the prototype method once so runtime hooks can't replace it with a non-function
-    // before the constructor runs. Avoid calling .bind on undefined values to prevent
-    // "Cannot read properties of undefined (reading 'bind')" crashes.
-    const initialPromptBuilder = typeof this.buildSystemPrompt === 'function'
-      ? this.buildSystemPrompt
-      : null;
-
-    this.buildSystemPrompt = (intent) => {
-      const builder =
-        typeof initialPromptBuilder === 'function'
-          ? initialPromptBuilder
-          : defaultBuildSystemPrompt;
-
-      try {
-        return builder.call(this, intent);
-      } catch (error) {
-        console.warn('System prompt builder failed, falling back to default.', error);
-        return defaultBuildSystemPrompt(intent);
-      }
-    };
+    // Ensure the system prompt builder is always an instance method (even if monkey-patched)
+    // so runtime hooks can't strip the function and cause "is not a function" errors.
+    this.buildSystemPrompt = this.buildSystemPrompt.bind(this);
   }
 
   /**
@@ -343,10 +326,33 @@ class AssistantOrchestrator {
   /**
    * Build system prompt based on intent
    * @param {Object} intent - Parsed intent
-   * @returns {string} - The Swedish system prompt guiding the assistant
-   */
+   * @returns {string} -
   buildSystemPrompt(intent) {
-    return defaultBuildSystemPrompt(intent);
+    const intentHints = [];
+
+    if (intent?.hasSearchTerms) {
+      intentHints.push('Prioritera kort som matchar söktermer eller taggar i frågan.');
+    }
+
+    if (intent?.hasArrangement) {
+      intentHints.push('Ge korta förslag på hur korten kan grupperas eller sorteras.');
+    }
+
+    if (intent?.hasAnalysis) {
+      intentHints.push('Sammanfatta korten och koppla ihop relaterade idéer.');
+    }
+
+    const intentGuidance = intentHints.length ? `\n\nFokus: ${intentHints.join(' ')}` : '';
+
+    return (
+      'Du är en spatial anteckningsassistent för whiteboard-appen Spatial Note. ' +
+      'Svara på svenska. Håll svaret koncist (3-6 meningar).\n\n' +
+      'Instruktioner:\n' +
+      '- Använd referenser i formatet [kort-id] när du hänvisar till specifika kort.\n' +
+      '- Föreslå max tre relevanta kort och undvik påhittade referenser.\n' +
+      '- Om du gör åtgärdsförslag, var tydlig och numrera dem.' +
+      intentGuidance
+    );
   }
 
   /**
