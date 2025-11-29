@@ -6,14 +6,73 @@
 import { contextBuilder } from './ContextBuilder.js';
 import { settingsPanel } from '../ui/SettingsPanel.js';
 
+const defaultBuildSystemPrompt = (intent) => {
+  const intentHints = [];
+
+  if (intent?.hasSearchTerms) {
+    intentHints.push('Prioritera kort som matchar söktermer eller taggar i frågan.');
+  }
+
+  if (intent?.hasArrangement) {
+    intentHints.push('Ge korta förslag på hur korten kan grupperas eller sorteras.');
+  }
+
+  if (intent?.hasAnalysis) {
+    intentHints.push('Sammanfatta korten och koppla ihop relaterade idéer.');
+  }
+
+  const intentGuidance = intentHints.length ? `\n\nFokus: ${intentHints.join(' ')}` : '';
+
+  return (
+    'Du är en spatial anteckningsassistent för whiteboard-appen Spatial Note. ' +
+    'Svara på svenska. Håll svaret koncist (3-6 meningar).\n\n' +
+    'Instruktioner:\n' +
+    '- Använd referenser i formatet [kort-id] när du hänvisar till specifika kort.\n' +
+    '- Föreslå max tre relevanta kort och undvik påhittade referenser.\n' +
+    '- Om du gör åtgärdsförslag, var tydlig och numrera dem.' +
+    intentGuidance
+  );
+};
+
 class AssistantOrchestrator {
   constructor() {
     this.conversationHistory = [];
     this.maxHistoryLength = 10; // Keep last 10 exchanges
     this.corsProxies = [
-      'https://corsproxy.io/?',
-      'https://thingproxy.freeboard.io/fetch/',
+      {
+        name: 'corsproxy.io',
+        buildUrl: (targetUrl) => `https://corsproxy.io/?${targetUrl}`,
+      },
+      {
+        name: 'thingproxy',
+        buildUrl: (targetUrl) => `https://thingproxy.freeboard.io/fetch/${targetUrl}`,
+      },
+      {
+        name: 'isomorphic-git',
+        buildUrl: (targetUrl) => `https://cors.isomorphic-git.org/${targetUrl}`,
+      },
     ];
+
+    // Capture the prototype method once so runtime hooks can't replace it with a non-function
+    // before the constructor runs. Avoid calling .bind on undefined values to prevent
+    // "Cannot read properties of undefined (reading 'bind')" crashes.
+    const initialPromptBuilder = typeof this.buildSystemPrompt === 'function'
+      ? this.buildSystemPrompt
+      : null;
+
+    this.buildSystemPrompt = (intent) => {
+      const builder =
+        typeof initialPromptBuilder === 'function'
+          ? initialPromptBuilder
+          : defaultBuildSystemPrompt;
+
+      try {
+        return builder.call(this, intent);
+      } catch (error) {
+        console.warn('System prompt builder failed, falling back to default.', error);
+        return defaultBuildSystemPrompt(intent);
+      }
+    };
   }
 
   /**
@@ -111,8 +170,16 @@ class AssistantOrchestrator {
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(`Claude API error: ${error.error?.message || response.statusText}`);
+      let errorMessage = response.statusText;
+
+      try {
+        const errorJson = await response.json();
+        errorMessage = errorJson.error?.message || errorMessage;
+      } catch {
+        errorMessage = (await response.text().catch(() => null)) || errorMessage;
+      }
+
+      throw new Error(`Claude API error: ${errorMessage}`);
     }
 
     const data = await response.json();
@@ -205,9 +272,6 @@ class AssistantOrchestrator {
 
         lastError = error.error?.message || response.statusText;
         attemptErrors.push(`${version}/${model}: ${lastError} (status: ${response.status})`);
-        const error = await response.json().catch(() => ({ error: { message: response.statusText } }));
-        lastError = error.error?.message || response.statusText;
-        attemptErrors.push(`${version}/${model}: ${lastError}`);
 
         const message = lastError.toLowerCase();
         const isMissingModel =
@@ -237,35 +301,88 @@ class AssistantOrchestrator {
    * @returns {Promise<Response>} - Successful response
    */
   async fetchWithCorsFallback(url, options) {
+    const requestOptions = {
+      ...options,
+      mode: options?.mode || 'cors',
+    };
+
     try {
-      return await fetch(url, options);
+      return await fetch(url, requestOptions);
     } catch (error) {
       console.warn('Direct fetch failed, trying CORS proxies...', error);
     }
 
     let lastError = null;
+    const attemptDetails = [];
 
     for (const proxy of this.corsProxies) {
       try {
-        const proxiedUrl = `${proxy}${url}`;
-        const response = await fetch(proxiedUrl, options);
+        const proxiedUrl = proxy.buildUrl ? proxy.buildUrl(url) : `${proxy}${url}`;
+        const response = await fetch(proxiedUrl, requestOptions);
         if (response.ok) {
-          console.warn(`CORS fallback activated via ${proxy}`);
+          console.warn(`CORS fallback activated via ${proxy.name || proxiedUrl}`);
           return response;
         }
 
-        const errorText = await response.text();
-        console.warn(`Proxy ${proxy} responded with status ${response.status}: ${errorText}`);
+        const errorText = await response.text().catch(() => '');
+        const summary = `status ${response.status}${errorText ? `: ${errorText.slice(0, 200)}` : ''}`;
+        lastError = new Error(summary);
+        attemptDetails.push(`${proxy.name || proxiedUrl} (${summary})`);
+        console.warn(`Proxy ${proxy.name || proxiedUrl} responded with ${summary}`);
       } catch (proxyError) {
         lastError = proxyError;
+        attemptDetails.push(`${proxy.name || 'proxy'} (fel: ${proxyError.message || proxyError})`);
         console.warn(`Proxy ${proxy} failed:`, proxyError);
       }
     }
 
-    throw new Error(`Nätverksfel eller CORS-blockad mot ${url}. ${lastError ? lastError.message : 'Ingen proxy fungerade.'}`);
+    const proxyInfo = attemptDetails.length ? ` Försökta proxies: ${attemptDetails.join(' | ')}` : '';
+    throw new Error(`Nätverksfel eller CORS-blockad mot ${url}. ${lastError ? lastError.message : 'Ingen proxy fungerade.'}${proxyInfo}`);
   }
 
   /**
    * Build system prompt based on intent
    * @param {Object} intent - Parsed intent
-   * @returns {string} -
+   * @returns {string} - The Swedish system prompt guiding the assistant
+   */
+  buildSystemPrompt(intent) {
+    return defaultBuildSystemPrompt(intent);
+  }
+
+  /**
+   * Parse card references from AI response text
+   * @param {string} responseText - AI response
+   * @param {Array} relevantCards - Cards included in context
+   * @returns {Array} - Array of card IDs referenced
+   */
+  parseCardReferences(responseText, relevantCards = []) {
+    const idMap = new Map();
+    relevantCards.forEach(card => {
+      const shortId = String(card.id).substring(0, 8);
+      idMap.set(shortId, card.id);
+    });
+
+    const matches = new Set();
+    const regex = /\[([a-zA-Z0-9-]{4,})\]/g;
+    let match;
+
+    while ((match = regex.exec(responseText)) !== null) {
+      const shortId = match[1];
+      if (idMap.has(shortId)) {
+        matches.add(idMap.get(shortId));
+      }
+    }
+
+    return Array.from(matches);
+  }
+
+  /**
+   * Clear conversation history
+   */
+  clearHistory() {
+    this.conversationHistory = [];
+  }
+}
+
+// Export singleton instance
+export const assistantOrchestrator = new AssistantOrchestrator();
