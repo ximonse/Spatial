@@ -9,8 +9,8 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Get API key and request body
-  const apiKey = req.headers['x-api-key'];
+  // Get API key and request body (handle case-insensitive headers)
+  const apiKey = req.headers['x-api-key'] || req.headers['X-API-Key'] || req.headers['X-Api-Key'];
   if (!apiKey) {
     return res.status(401).json({ error: 'Missing API key' });
   }
@@ -35,6 +35,11 @@ export default async function handler(req, res) {
 
     // Get response data
     const data = await response.json();
+
+    // If there's an error from Anthropic, provide more context
+    if (!response.ok) {
+      console.error('Anthropic API error:', response.status, data);
+    }
 
     // Forward status code and response
     res.status(response.status).json(data);
