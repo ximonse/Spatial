@@ -220,13 +220,17 @@ export class SpatialNoteApp {
    * Setup context menu listener
    */
   _setupContextMenu() {
+    console.log('[_setupContextMenu] Setting up context menu listener.');
     const stage = stageManager.getStage();
     stage.on('contextmenu', (e) => {
+      console.log('[_setupContextMenu] contextmenu event fired.', e);
       // Prevent default browser menu
       e.evt.preventDefault();
 
       const target = e.target;
+      console.log('[_setupContextMenu] Event target:', target);
       const targetCard = cardFactory.getCardByNode(target);
+      console.log('[_setupContextMenu] Target card:', targetCard);
 
       if (targetCard) {
         const selectedCards = state.get('selectedCards');
@@ -234,6 +238,7 @@ export class SpatialNoteApp {
         if (!selectedCards.has(targetCard.data.id)) {
           state.clearSelection();
           state.selectCard(targetCard.data.id);
+          console.log('[_setupContextMenu] Card selected:', targetCard.data.id);
         }
 
         // Now, get the selection again as it might have changed
@@ -241,10 +246,12 @@ export class SpatialNoteApp {
         if (finalSelection.length > 0) {
           const pos = stage.getPointerPosition();
           contextMenu.show(pos.x, pos.y, finalSelection);
+          console.log('[_setupContextMenu] Context menu shown at', pos.x, pos.y, 'for cards:', finalSelection);
         }
       } else {
         // Clicked on empty space, hide menu
         contextMenu.hide();
+        console.log('[_setupContextMenu] Clicked on empty space, hiding context menu.');
       }
     });
   }
