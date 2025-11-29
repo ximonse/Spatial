@@ -4,6 +4,8 @@
 
 import { CARD_COLOR_PALETTE } from '../utils/constants.js';
 import { changeSelectedCardsColor, deleteSelectedCards } from './cardOperations.js';
+import { tagEditor } from './tagEditor.js';
+import { state } from '../core/state.js';
 
 class ContextMenu {
   constructor() {
@@ -37,9 +39,9 @@ class ContextMenu {
    * Show the context menu at a specific position
    * @param {number} x - X coordinate
    * @param {number} y - Y coordinate
-   * @param {Array} selectedCards - The currently selected card IDs
+   * @param {Array} selectedIds - The currently selected card IDs
    */
-  show(x, y, selectedCards) {
+  show(x, y, selectedIds) {
     if (!this.menu) this.init();
 
     const colorPaletteHTML = CARD_COLOR_PALETTE.map(color =>
@@ -54,9 +56,9 @@ class ContextMenu {
             ${colorPaletteHTML}
           </div>
         </li>
-        <li>🏷️ Manage Tags</li>
+        <li id="manage-tags-btn">🏷️ Manage Tags</li>
         <li class="separator"></li>
-        <li id="delete-cards-btn">🗑️ Delete ${selectedCards.length} cards</li>
+        <li id="delete-cards-btn">🗑️ Delete ${selectedIds.length} cards</li>
       </ul>
     `;
 
@@ -71,6 +73,12 @@ class ContextMenu {
 
     this.menu.querySelector('#delete-cards-btn').addEventListener('click', () => {
       deleteSelectedCards();
+      this.hide();
+    });
+
+    this.menu.querySelector('#manage-tags-btn').addEventListener('click', () => {
+      const selectedCards = state.getSelectedCards();
+      tagEditor.show(selectedCards);
       this.hide();
     });
 

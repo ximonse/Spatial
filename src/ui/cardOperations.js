@@ -179,3 +179,51 @@ export async function changeSelectedCardsColor(color) {
   statusNotification.showTemporary(`🎨 Changed color for ${selectedIds.size} card(s)`);
   console.log(`🎨 Changed color for ${selectedIds.size} card(s)`);
 }
+
+/**
+ * Add a tag to all selected cards
+ * @param {string} tag - The tag to add
+ */
+export async function addTagToSelectedCards(tag) {
+  const selectedCards = state.getSelectedCards();
+  if (selectedCards.length === 0 || !tag) return;
+
+  const updatePromises = [];
+  for (const card of selectedCards) {
+    const currentTags = card.tags || [];
+    if (!currentTags.includes(tag)) {
+      const newTags = [...currentTags, tag];
+      updatePromises.push(cardFactory.updateCard(card.id, { tags: newTags }));
+    }
+  }
+
+  if (updatePromises.length > 0) {
+    await Promise.all(updatePromises);
+    statusNotification.showTemporary(`🏷️ Added tag "${tag}" to ${updatePromises.length} card(s)`);
+  } else {
+    statusNotification.showTemporary(`Tag "${tag}" already present on all selected cards`);
+  }
+}
+
+/**
+ * Remove a tag from all selected cards
+ * @param {string} tag - The tag to remove
+ */
+export async function removeTagFromSelectedCards(tag) {
+  const selectedCards = state.getSelectedCards();
+  if (selectedCards.length === 0 || !tag) return;
+
+  const updatePromises = [];
+  for (const card of selectedCards) {
+    const currentTags = card.tags || [];
+    if (currentTags.includes(tag)) {
+      const newTags = currentTags.filter(t => t !== tag);
+      updatePromises.push(cardFactory.updateCard(card.id, { tags: newTags }));
+    }
+  }
+
+  if (updatePromises.length > 0) {
+    await Promise.all(updatePromises);
+    statusNotification.showTemporary(`🗑️ Removed tag "${tag}" from ${updatePromises.length} card(s)`);
+  }
+}
