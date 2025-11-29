@@ -27,7 +27,7 @@ const defaultBuildSystemPrompt = (intent) => {
     'Du är en spatial anteckningsassistent för whiteboard-appen Spatial Note. ' +
     'Svara på svenska. Håll svaret koncist (3-6 meningar).\n\n' +
     'Instruktioner:\n' +
-    '- Använd referenser i formatet [kort-id] när du hänvisar till specifika kort.\n' +
+    '- VIKTIGT: När du hänvisar till specifika kort, MÅSTE du använda formatet [kort-id]. Exempel: "Kortet [a4f2c1b3] handlar om...".\n' +
     '- Föreslå max tre relevanta kort och undvik påhittade referenser.\n' +
     '- Om du gör åtgärdsförslag, var tydlig och numrera dem.' +
     intentGuidance
