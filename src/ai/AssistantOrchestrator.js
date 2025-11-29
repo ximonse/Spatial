@@ -10,6 +10,10 @@ class AssistantOrchestrator {
   constructor() {
     this.conversationHistory = [];
     this.maxHistoryLength = 10; // Keep last 10 exchanges
+    this.corsProxies = [
+      'https://corsproxy.io/?',
+      'https://thingproxy.freeboard.io/fetch/',
+    ];
   }
 
   /**
@@ -91,7 +95,7 @@ class AssistantOrchestrator {
       },
     ];
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await this.fetchWithCorsFallback('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -130,36 +134,137 @@ class AssistantOrchestrator {
 
     const prompt = `${systemPrompt}\n\n${context}\n\n---\n\nFråga: ${userMessage}`;
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: prompt,
-            }],
-          }],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 2000,
-          },
-        }),
-      }
-    );
+    const payload = {
+      contents: [{
+        parts: [{
+          text: prompt,
+        }],
+      }],
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 2000,
+      },
+    };
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(`Gemini API error: ${error.error?.message || response.statusText}`);
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+
+    // Try a small matrix of versions/models to avoid merge-conflict style regressions when
+    // upstream API availability shifts (e.g. "model not found" for the latest flash SKU).
+    const candidateEndpoints = [
+      { version: 'v1', models: ['gemini-1.5-flash-latest', 'gemini-1.5-pro-latest', 'gemini-1.5-flash', 'gemini-1.0-pro'] },
+      { version: 'v1beta', models: ['gemini-1.5-flash-latest', 'gemini-1.5-pro-latest', 'gemini-1.5-flash', 'gemini-1.0-pro'] },
+    ];
+
+    let lastError = null;
+    const tried = [];
+    const attemptErrors = [];
+
+    for (const { version, models } of candidateEndpoints) {
+      for (const model of models) {
+        const url = `https://generativelanguage.googleapis.com/${version}/models/${model}:generateContent?key=${apiKey}`;
+        tried.push(`${version}/${model}`);
+
+        let response;
+        try {
+          response = await fetch(url, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(payload),
+          });
+        } catch (fetchError) {
+          lastError = fetchError.message || String(fetchError);
+          attemptErrors.push(`${version}/${model}: ${lastError}`);
+          continue;
+        }
+
+        if (response.ok) {
+          const data = await response.json();
+          const candidate = data.candidates?.[0];
+          const textPart = candidate?.content?.parts?.find(part => part.text)?.text;
+
+          if (textPart) {
+            return { text: textPart };
+          }
+
+          const finishReason = candidate?.finishReason;
+          const blockReason = data.promptFeedback?.blockReason;
+          const safetyReasons = data.promptFeedback?.safetyRatings
+            ?.map(rating => rating.category)
+            ?.join(', ');
+
+          const reasonParts = [blockReason, finishReason, safetyReasons && `säkerhet: ${safetyReasons}`]
+            .filter(Boolean)
+            .join(' | ');
+
+          lastError = `svar saknar text (${reasonParts || 'okänt skäl'})`;
+          attemptErrors.push(`${version}/${model}: ${lastError}`);
+          continue;
+        }
+
+        const contentType = response.headers.get('content-type') || '';
+        const error = contentType.includes('application/json')
+          ? await response.json().catch(() => ({ error: { message: response.statusText } }))
+          : { error: { message: await response.text().catch(() => response.statusText) } };
+
+        lastError = error.error?.message || response.statusText;
+        attemptErrors.push(`${version}/${model}: ${lastError} (status: ${response.status})`);
+
+        const message = lastError.toLowerCase();
+        const isMissingModel =
+          response.status === 404 ||
+          message.includes('not found') ||
+          message.includes('not supported for generatecontent');
+
+        // If the model isn't found or supported, try the next candidate; otherwise surface the error immediately
+        if (!isMissingModel) {
+          throw new Error(`Gemini API error (${version}/${model}): ${lastError}`);
+        }
+      }
     }
 
-    const data = await response.json();
-    return {
-      text: data.candidates[0].content.parts[0].text,
-    };
+    throw new Error(
+      `Gemini API error: ${lastError || 'Okänd modell'} (försökte modeller: ${tried.join(', ')})${
+        attemptErrors.length ? ` | fel: ${attemptErrors.join(' | ')}` : ''
+      }`
+    );
+  }
+
+  /**
+   * Fetch helper that retries via public CORS proxies when the direct call fails
+   * (e.g. browser blocks cross-origin requests to Anthropic).
+   * @param {string} url - Target URL
+   * @param {RequestInit} options - Fetch options
+   * @returns {Promise<Response>} - Successful response
+   */
+  async fetchWithCorsFallback(url, options) {
+    try {
+      return await fetch(url, options);
+    } catch (error) {
+      console.warn('Direct fetch failed, trying CORS proxies...', error);
+    }
+
+    let lastError = null;
+
+    for (const proxy of this.corsProxies) {
+      try {
+        const proxiedUrl = `${proxy}${url}`;
+        const response = await fetch(proxiedUrl, options);
+        if (response.ok) {
+          console.warn(`CORS fallback activated via ${proxy}`);
+          return response;
+        }
+
+        const errorText = await response.text();
+        console.warn(`Proxy ${proxy} responded with status ${response.status}: ${errorText}`);
+      } catch (proxyError) {
+        lastError = proxyError;
+        console.warn(`Proxy ${proxy} failed:`, proxyError);
+      }
+    }
+
+    throw new Error(`Nätverksfel eller CORS-blockad mot ${url}. ${lastError ? lastError.message : 'Ingen proxy fungerade.'}`);
   }
 
   /**
