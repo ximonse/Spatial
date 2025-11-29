@@ -77,8 +77,23 @@ class AssistantOrchestrator {
       this.conversationHistory = this.conversationHistory.slice(-this.maxHistoryLength * 2);
     }
 
-    // Call serverless API
-    const response = await this.callServerlessAPI(selectedProvider, apiKey, userMessage, context, intent);
+    // Call appropriate API (direct on localhost, serverless on production)
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    let response;
+
+    if (isLocalhost) {
+      // Localhost: direct API calls
+      if (selectedProvider === 'claude') {
+        response = await this.callClaude(apiKey, userMessage, context, intent);
+      } else if (selectedProvider === 'gemini') {
+        response = await this.callGemini(apiKey, userMessage, context, intent);
+      } else {
+        throw new Error(`Okänd AI-provider: ${selectedProvider}`);
+      }
+    } else {
+      // Production: use serverless API
+      response = await this.callServerlessAPI(selectedProvider, apiKey, userMessage, context, intent);
+    }
 
     // Add response to history
     this.conversationHistory.push({
