@@ -123,10 +123,17 @@ class AssistantOrchestrator {
       },
     ];
 
+    // Validate API key format
+    if (!apiKey || !apiKey.startsWith('sk-ant-')) {
+      throw new Error('Ogiltig Claude API-nyckel. Nyckeln ska börja med "sk-ant-". Kontrollera inställningarna.');
+    }
+
     // Use serverless function instead of direct API call to avoid CORS
     const apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
       ? '/api/anthropic'  // Local development
       : '/api/anthropic'; // Production (Vercel)
+
+    console.log('🔑 Calling Claude API via:', apiUrl, '| Key starts with:', apiKey.substring(0, 10) + '...');
 
     const response = await fetch(apiUrl, {
       method: 'POST',
@@ -150,6 +157,11 @@ class AssistantOrchestrator {
         errorMessage = errorJson.error?.message || errorMessage;
       } catch {
         errorMessage = (await response.text().catch(() => null)) || errorMessage;
+      }
+
+      // Provide helpful error messages
+      if (response.status === 401) {
+        throw new Error('API-nyckeln är ogiltig eller har utgått. Kontrollera din Claude API-nyckel i inställningarna.');
       }
 
       throw new Error(`Claude API error: ${errorMessage}`);

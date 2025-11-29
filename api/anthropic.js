@@ -11,8 +11,22 @@ export default async function handler(req, res) {
 
   // Get API key and request body (handle case-insensitive headers)
   const apiKey = req.headers['x-api-key'] || req.headers['X-API-Key'] || req.headers['X-Api-Key'];
+
+  console.log('📨 Request received:', {
+    method: req.method,
+    hasApiKey: !!apiKey,
+    keyPrefix: apiKey ? apiKey.substring(0, 10) + '...' : 'none',
+    headers: Object.keys(req.headers)
+  });
+
   if (!apiKey) {
+    console.error('❌ No API key provided');
     return res.status(401).json({ error: 'Missing API key' });
+  }
+
+  if (!apiKey.startsWith('sk-ant-')) {
+    console.error('❌ Invalid API key format');
+    return res.status(401).json({ error: 'Invalid API key format. Key should start with "sk-ant-"' });
   }
 
   try {

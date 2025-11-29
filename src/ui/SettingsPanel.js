@@ -151,12 +151,23 @@ class SettingsPanel {
     const geminiKey = document.getElementById('gemini-api-key').value.trim();
     const defaultProvider = document.getElementById('default-ai-provider').value;
 
+    // Validate Claude API key format if provided
+    if (claudeKey && !claudeKey.startsWith('sk-ant-')) {
+      this.showNotification('⚠️ Claude API-nyckeln ska börja med "sk-ant-"');
+      console.warn('Invalid Claude API key format');
+      return;
+    }
+
     localStorage.setItem('claude_api_key', claudeKey);
     localStorage.setItem('gemini_api_key', geminiKey);
     localStorage.setItem('default_ai_provider', defaultProvider);
 
     this.showNotification('✅ Inställningar sparade!');
-    console.log('✅ Settings saved');
+    console.log('✅ Settings saved', {
+      claudeKeySet: !!claudeKey,
+      geminiKeySet: !!geminiKey,
+      defaultProvider
+    });
   }
 
   /**
