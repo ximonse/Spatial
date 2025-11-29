@@ -3,7 +3,7 @@
  * Converts JSON card data to compact text format for AI consumption
  */
 
-import { searchCards } from '../utils/search.js';
+import { searchCards } from '../search/search.js';
 
 /**
  * Spatial regions for grouping cards
