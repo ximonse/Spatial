@@ -110,6 +110,10 @@ export class CardFactory {
       card.setPosition(updates.x ?? card.data.x, updates.y ?? card.data.y);
     }
 
+    if (updates.backgroundColor !== undefined) {
+      card.updateBackgroundColor(updates.backgroundColor);
+    }
+
     // Update state
     state.updateCard(id, updates);
 

@@ -172,4 +172,12 @@ export class CardContentOverlay {
       this.element = null;
     }
   }
+
+  /**
+   * Update overlay background color
+   */
+  updateBackgroundColor(color) {
+    this.backgroundColor = color;
+    this.updatePosition();
+  }
 }

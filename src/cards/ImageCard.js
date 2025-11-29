@@ -300,4 +300,18 @@ export class ImageCard {
   getGroup() {
     return this.group;
   }
+
+  /**
+   * Update card background color
+   */
+  updateBackgroundColor(color) {
+    this.data.backgroundColor = color;
+    if (this.rect) {
+      this.rect.fill(color);
+      this.group.getLayer()?.batchDraw();
+    }
+    if (this.contentOverlay) {
+      this.contentOverlay.updateBackgroundColor(color);
+    }
+  }
 }
