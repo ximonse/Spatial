@@ -294,8 +294,7 @@ class AssistantOrchestrator {
   /**
    * Build system prompt based on intent
    * @param {Object} intent - Parsed intent
-   * @returns {string} - The Swedish system prompt guiding the assistant
-   */
+   * @returns {string} -
   buildSystemPrompt(intent) {
     const intentHints = [];
 
