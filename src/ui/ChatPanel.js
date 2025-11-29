@@ -29,6 +29,7 @@ class ChatPanel {
         <div class="chat-title">
           <span class="chat-icon">🤖</span>
           <span class="chat-title-text">AI Assistent</span>
+          <span id="active-provider-indicator" class="active-provider-indicator"></span>
         </div>
         <div class="chat-controls">
           <button class="chat-btn chat-settings" title="Inställningar">⚙️</button>
@@ -255,8 +256,34 @@ class ChatPanel {
       setTimeout(() => {
         if (statusEl.textContent === text) {
           statusEl.textContent = '';
+          this._updateProviderIndicator(settingsPanel.getDefaultProvider()); // Reset to default if status clears
         }
       }, 3000);
+    }
+
+    // Update provider indicator
+    const providerMatch = text.match(/✓\s(claude|gemini|openai)/i);
+    if (providerMatch) {
+      this._updateProviderIndicator(providerMatch[1]);
+    } else if (!text) {
+      this._updateProviderIndicator(settingsPanel.getDefaultProvider()); // Show default if status is empty
+    }
+  }
+
+  /**
+   * Update the active provider indicator in the UI
+   * @param {string} providerName - The name of the active provider ('claude', 'gemini', 'openai')
+   */
+  _updateProviderIndicator(providerName) {
+    const indicator = document.getElementById('active-provider-indicator');
+    if (indicator) {
+      const displayNames = {
+        'claude': 'Claude',
+        'gemini': 'Gemini',
+        'openai': 'ChatGPT',
+      };
+      indicator.textContent = displayNames[providerName] || '';
+      indicator.className = `active-provider-indicator provider-${providerName}`;
     }
   }
 
@@ -331,6 +358,7 @@ class ChatPanel {
   open() {
     this.panel.classList.remove('hidden');
     this.isOpen = true;
+    this._updateProviderIndicator(settingsPanel.getDefaultProvider());
 
     // Focus input
     setTimeout(() => {
