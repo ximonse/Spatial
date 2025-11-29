@@ -53,6 +53,8 @@ class ContextBuilder {
     // Build compact context
     const context = this.buildCompactContext(relevantCards, cards.length, strategy);
 
+    console.log(`📦 Context size: ${context.length} characters`);
+
     return {
       context,
       relevantCards,
