@@ -326,7 +326,8 @@ class AssistantOrchestrator {
   /**
    * Build system prompt based on intent
    * @param {Object} intent - Parsed intent
-   * @returns {string} -
+   * @returns {string} - System prompt string
+   */
   buildSystemPrompt(intent) {
     const intentHints = [];
 
