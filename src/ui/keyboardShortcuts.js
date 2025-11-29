@@ -40,6 +40,7 @@ export function setupKeyboardShortcuts(app) {
     const key = e.key.toLowerCase();
     const now = Date.Now();
     let handled = false;
+    let searchInput; // Declare searchInput once here
 
     // Check for G+V, G+H, G+T combinations (within 500ms)
     if (lastKey === 'g' && now - lastKeyTime < 500) {
@@ -101,7 +102,7 @@ export function setupKeyboardShortcuts(app) {
         }
         state.clearSelection();
         state.set('searchQuery', '');
-        const searchInput = document.getElementById('search-input');
+        searchInput = document.getElementById('search-input'); // Assign here
         if (searchInput) {
           searchInput.value = '';
         }
@@ -122,7 +123,7 @@ export function setupKeyboardShortcuts(app) {
         break;
 
       case 'f':
-        const searchInput = document.getElementById('search-input');
+        searchInput = document.getElementById('search-input'); // Assign here
         if (searchInput) {
           searchInput.focus();
         }

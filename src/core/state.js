@@ -12,6 +12,9 @@ class AppState {
       cards: [],
       selectedCards: new Set(),
 
+      // Strokes
+      strokes: [],
+
       // View
       currentView: 'board', // 'board' or 'column'
       theme: THEMES.NATURE,
@@ -118,6 +121,22 @@ class AppState {
     return this._state.cards.find(c => c.id === id);
   }
 
+  // ===== Stroke operations =====
+
+  addStroke(stroke) {
+    this._state.strokes.push(stroke);
+    this._notify('strokes', this._state.strokes);
+  }
+
+  removeStroke(id) {
+    this._state.strokes = this._state.strokes.filter(s => s.id !== id);
+    this._notify('strokes', this._state.strokes);
+  }
+
+  getStrokes() {
+    return this._state.strokes;
+  }
+
   // ===== Selection operations =====
 
   selectCard(id) {
@@ -167,7 +186,10 @@ class AppState {
     this._state.history = this._state.history.slice(0, this._state.historyIndex + 1);
 
     // Add current state to history
-    const snapshot = JSON.parse(JSON.stringify(this._state.cards));
+    const snapshot = {
+      cards: JSON.parse(JSON.stringify(this._state.cards)),
+      strokes: JSON.parse(JSON.stringify(this._state.strokes)),
+    };
     this._state.history.push(snapshot);
     this._state.historyIndex++;
 
@@ -181,20 +203,22 @@ class AppState {
   undo() {
     if (this._state.historyIndex > 0) {
       this._state.historyIndex--;
-      this._state.cards = JSON.parse(JSON.stringify(
-        this._state.history[this._state.historyIndex]
-      ));
+      const snapshot = this._state.history[this._state.historyIndex];
+      this._state.cards = JSON.parse(JSON.stringify(snapshot.cards));
+      this._state.strokes = JSON.parse(JSON.stringify(snapshot.strokes));
       this._notify('cards', this._state.cards);
+      this._notify('strokes', this._state.strokes);
     }
   }
 
   redo() {
     if (this._state.historyIndex < this._state.history.length - 1) {
       this._state.historyIndex++;
-      this._state.cards = JSON.parse(JSON.stringify(
-        this._state.history[this._state.historyIndex]
-      ));
+      const snapshot = this._state.history[this._state.historyIndex];
+      this._state.cards = JSON.parse(JSON.stringify(snapshot.cards));
+      this._state.strokes = JSON.parse(JSON.stringify(snapshot.strokes));
       this._notify('cards', this._state.cards);
+      this._notify('strokes', this._state.strokes);
     }
   }
 }

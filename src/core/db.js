@@ -14,11 +14,13 @@ class SpatialDB extends Dexie {
       cards: '++id, type, x, y, createdAt, updatedAt, tags, pinned',
       settings: 'key',
       images: 'id, cardId',
+      strokes: '++id, cardId, points, color, baseWidth, pressureAware, createdAt',
     });
 
     this.cards = this.table('cards');
     this.settings = this.table('settings');
     this.images = this.table('images');
+    this.strokes = this.table('strokes');
   }
 
   /**
@@ -66,6 +68,33 @@ class SpatialDB extends Dexie {
    */
   async getCard(id) {
     return await this.cards.get(id);
+  }
+
+  /**
+   * Add a new stroke
+   */
+  async addStroke(strokeData) {
+    const timestamp = Date.now();
+    const stroke = {
+      ...strokeData,
+      createdAt: timestamp,
+    };
+    const id = await this.strokes.add(stroke);
+    return { id, ...stroke };
+  }
+
+  /**
+   * Delete a stroke
+   */
+  async deleteStroke(id) {
+    await this.strokes.delete(id);
+  }
+
+  /**
+   * Get all strokes
+   */
+  async getAllStrokes() {
+    return await this.strokes.toArray();
   }
 
   /**
@@ -120,6 +149,7 @@ class SpatialDB extends Dexie {
   async clearAll() {
     await this.cards.clear();
     await this.images.clear();
+    await this.strokes.clear();
   }
 }
 
