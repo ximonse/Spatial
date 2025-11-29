@@ -4,7 +4,7 @@
  */
 
 import { state } from '../core/state.js';
-import { cardFactory } from '../cards/CardFactory.js';
+import { cardFactory } from '../cards/CardFactory.js'; // Import cardFactory
 import { marked } from 'marked';
 
 export class CardEditor {
@@ -15,6 +15,7 @@ export class CardEditor {
     this.tagsEl = null;
     this.commentsEl = null;
     this.currentCardId = null;
+    this.geminiOcrBtn = null; // Reference to the Gemini OCR button
   }
 
   /**
@@ -54,6 +55,7 @@ export class CardEditor {
               placeholder="Comment (e.g: författare: Simon, deadline: 2024-12-31)"
               style="padding: 8px 12px; border: 1px solid #E5E7EB; border-radius: 6px; font-size: 14px;"
             />
+            <button id="gemini-ocr-btn" class="btn-secondary hidden" style="margin-top: 10px;">✨ OCR with Gemini AI</button>
           </div>
           <div class="editor-preview">
             <h4>Preview</h4>
@@ -74,6 +76,7 @@ export class CardEditor {
     this.previewEl = document.getElementById('editor-preview-content');
     this.tagsEl = document.getElementById('editor-tags');
     this.commentsEl = document.getElementById('editor-comments');
+    this.geminiOcrBtn = document.getElementById('gemini-ocr-btn');
   }
 
   /**
@@ -100,6 +103,22 @@ export class CardEditor {
     // Save button
     document.getElementById('editor-save')?.addEventListener('click', () => {
       this.save();
+    });
+
+    // Gemini OCR button
+    this.geminiOcrBtn?.addEventListener('click', async () => {
+      if (this.currentCardId) {
+        const cardInstance = cardFactory.getCard(this.currentCardId);
+        if (cardInstance && typeof cardInstance.processWithGemini === 'function') {
+          await cardInstance.processWithGemini();
+          // After processing, update the editor with new content/tags
+          const updatedCardData = state.getCard(this.currentCardId);
+          this.textareaEl.value = updatedCardData.content || '';
+          this.tagsEl.value = (updatedCardData.tags || []).join(', ');
+          this.commentsEl.value = updatedCardData.comments || '';
+          this._updatePreview();
+        }
+      }
     });
 
     // Click outside to close
@@ -133,6 +152,7 @@ export class CardEditor {
   open(cardId) {
     this.currentCardId = cardId;
     const cardData = state.getCard(cardId);
+    const cardInstance = cardFactory.getCard(cardId); // Get card instance
 
     if (!cardData) {
       console.error('Card not found:', cardId);
@@ -150,6 +170,13 @@ export class CardEditor {
       this.commentsEl.value = cardData.comments.join(', ');
     } else {
       this.commentsEl.value = cardData.comments || '';
+    }
+
+    // Show/hide Gemini OCR button based on card type
+    if (cardInstance && cardInstance.data.type === 'image') {
+      this.geminiOcrBtn.classList.remove('hidden');
+    } else {
+      this.geminiOcrBtn.classList.add('hidden');
     }
 
     // Update preview
