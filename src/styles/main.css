@@ -646,7 +646,7 @@ body {
   bottom: 20px;
   left: 20px;
   padding: 8px 16px;
-  background: rgba(255, 255, 255, 0.9);
+  background: transparent;
   color: #111827;
   font-size: 13px;
   font-weight: 500;
