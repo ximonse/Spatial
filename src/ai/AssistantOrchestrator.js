@@ -38,20 +38,6 @@ class AssistantOrchestrator {
   constructor() {
     this.conversationHistory = [];
     this.maxHistoryLength = 10; // Keep last 10 exchanges
-    this.corsProxies = [
-      {
-        name: 'corsproxy.io',
-        buildUrl: (targetUrl) => `https://corsproxy.io/?${targetUrl}`,
-      },
-      {
-        name: 'thingproxy',
-        buildUrl: (targetUrl) => `https://thingproxy.freeboard.io/fetch/${targetUrl}`,
-      },
-      {
-        name: 'isomorphic-git',
-        buildUrl: (targetUrl) => `https://cors.isomorphic-git.org/${targetUrl}`,
-      },
-    ];
 
     // Ensure the system prompt builder is always an instance method (even if monkey-patched)
     // so runtime hooks can't strip the function and cause "is not a function" errors.
@@ -137,12 +123,16 @@ class AssistantOrchestrator {
       },
     ];
 
-    const response = await this.fetchWithCorsFallback('https://api.anthropic.com/v1/messages', {
+    // Use serverless function instead of direct API call to avoid CORS
+    const apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      ? '/api/anthropic'  // Local development
+      : '/api/anthropic'; // Production (Vercel)
+
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
         model: 'claude-3-5-sonnet-20241022',
@@ -276,52 +266,6 @@ class AssistantOrchestrator {
     );
   }
 
-  /**
-   * Fetch helper that retries via public CORS proxies when the direct call fails
-   * (e.g. browser blocks cross-origin requests to Anthropic).
-   * @param {string} url - Target URL
-   * @param {RequestInit} options - Fetch options
-   * @returns {Promise<Response>} - Successful response
-   */
-  async fetchWithCorsFallback(url, options) {
-    const requestOptions = {
-      ...options,
-      mode: options?.mode || 'cors',
-    };
-
-    try {
-      return await fetch(url, requestOptions);
-    } catch (error) {
-      console.warn('Direct fetch failed, trying CORS proxies...', error);
-    }
-
-    let lastError = null;
-    const attemptDetails = [];
-
-    for (const proxy of this.corsProxies) {
-      try {
-        const proxiedUrl = proxy.buildUrl ? proxy.buildUrl(url) : `${proxy}${url}`;
-        const response = await fetch(proxiedUrl, requestOptions);
-        if (response.ok) {
-          console.warn(`CORS fallback activated via ${proxy.name || proxiedUrl}`);
-          return response;
-        }
-
-        const errorText = await response.text().catch(() => '');
-        const summary = `status ${response.status}${errorText ? `: ${errorText.slice(0, 200)}` : ''}`;
-        lastError = new Error(summary);
-        attemptDetails.push(`${proxy.name || proxiedUrl} (${summary})`);
-        console.warn(`Proxy ${proxy.name || proxiedUrl} responded with ${summary}`);
-      } catch (proxyError) {
-        lastError = proxyError;
-        attemptDetails.push(`${proxy.name || 'proxy'} (fel: ${proxyError.message || proxyError})`);
-        console.warn(`Proxy ${proxy} failed:`, proxyError);
-      }
-    }
-
-    const proxyInfo = attemptDetails.length ? ` Försökta proxies: ${attemptDetails.join(' | ')}` : '';
-    throw new Error(`Nätverksfel eller CORS-blockad mot ${url}. ${lastError ? lastError.message : 'Ingen proxy fungerade.'}${proxyInfo}`);
-  }
 
   /**
    * Build system prompt based on intent
