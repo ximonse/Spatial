@@ -14,14 +14,14 @@ import { statusNotification } from '../ui/statusNotification.js';
 export async function importZoteroNotes() {
   try {
     // Open file picker and read file
-    statusNotification.show('Välj Zotero HTML-fil...');
+    statusNotification.showTemporary('Välj Zotero HTML-fil...');
     const htmlContent = await readZoteroFile();
 
     // Parse HTML to extract notes
     const notes = parseZoteroHTML(htmlContent);
 
     if (notes.length === 0) {
-      statusNotification.show('Inga anteckningar hittades i filen');
+      statusNotification.showTemporary('Inga anteckningar hittades i filen');
       return;
     }
 
@@ -47,9 +47,9 @@ export async function importZoteroNotes() {
       createdCount++;
     }
 
-    statusNotification.show(`Importerade ${createdCount} anteckningar från Zotero`);
+    statusNotification.showTemporary(`Importerade ${createdCount} anteckningar från Zotero`);
   } catch (error) {
     console.error('Zotero import failed:', error);
-    statusNotification.show('Misslyckades att importera Zotero-fil');
+    statusNotification.showTemporary('Misslyckades att importera Zotero-fil');
   }
 }
