@@ -69,7 +69,7 @@ async function callClaude(apiKey, message, context) {
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(`Claude API error: ${error.error?.message || response.statusText}`);
+    throw new Error(`Claude API error: ${JSON.stringify(error)}`);
   }
 
   const data = await response.json();
@@ -86,7 +86,7 @@ async function callGemini(apiKey, message, context) {
   const prompt = `${context.systemPrompt}\n\n${context.cardContext}\n\n---\n\nFråga: ${message}`;
 
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`,
     {
       method: 'POST',
       headers: {
