@@ -55,14 +55,7 @@ class AssistantOrchestrator {
 
     // Ensure the system prompt builder is always an instance method (even if monkey-patched)
     // so runtime hooks can't strip the function and cause "is not a function" errors.
-    const promptBuilder = typeof this.buildSystemPrompt === 'function'
-      ? this.buildSystemPrompt
-      : defaultBuildSystemPrompt;
-
-    // Guard against hooks that strip or replace the method with a non-function value
-    this.buildSystemPrompt = typeof promptBuilder === 'function'
-      ? promptBuilder.bind(this)
-      : defaultBuildSystemPrompt;
+    this.buildSystemPrompt = this.buildSystemPrompt.bind(this);
   }
 
   /**
@@ -333,10 +326,33 @@ class AssistantOrchestrator {
   /**
    * Build system prompt based on intent
    * @param {Object} intent - Parsed intent
-   * @returns {string} - The Swedish system prompt guiding the assistant
-   */
+   * @returns {string} -
   buildSystemPrompt(intent) {
-    return defaultBuildSystemPrompt(intent);
+    const intentHints = [];
+
+    if (intent?.hasSearchTerms) {
+      intentHints.push('Prioritera kort som matchar söktermer eller taggar i frågan.');
+    }
+
+    if (intent?.hasArrangement) {
+      intentHints.push('Ge korta förslag på hur korten kan grupperas eller sorteras.');
+    }
+
+    if (intent?.hasAnalysis) {
+      intentHints.push('Sammanfatta korten och koppla ihop relaterade idéer.');
+    }
+
+    const intentGuidance = intentHints.length ? `\n\nFokus: ${intentHints.join(' ')}` : '';
+
+    return (
+      'Du är en spatial anteckningsassistent för whiteboard-appen Spatial Note. ' +
+      'Svara på svenska. Håll svaret koncist (3-6 meningar).\n\n' +
+      'Instruktioner:\n' +
+      '- Använd referenser i formatet [kort-id] när du hänvisar till specifika kort.\n' +
+      '- Föreslå max tre relevanta kort och undvik påhittade referenser.\n' +
+      '- Om du gör åtgärdsförslag, var tydlig och numrera dem.' +
+      intentGuidance
+    );
   }
 
   /**
