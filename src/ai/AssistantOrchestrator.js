@@ -200,6 +200,64 @@ class AssistantOrchestrator {
   clearHistory() {
     this.conversationHistory = [];
   }
+
+  /**
+   * Use AI to split a block of text into cards
+   * @param {string} text - The text to split
+   * @param {string} provider - The AI provider to use
+   * @returns {Promise<Array>} - An array of card data objects
+   */
+  async splitTextIntoCards(text, provider) {
+    const apiKey = settingsPanel.getApiKey(provider);
+    if (!apiKey) {
+      throw new Error(`Ingen API-nyckel för ${provider}. Öppna inställningar för att lägga till.`);
+    }
+
+    const systemPrompt = `You are a text analysis tool. Your task is to split the following text into a series of logical, self-contained notes. Each note should become a separate card. Identify relevant tags and comments for each card. Return the output as a valid JSON array of objects. Each object must have the following keys: "content" (string), "tags" (array of strings), and "comments" (array of strings). Do not include any other text or explanation in your response, only the JSON array. The content should be in the same language as the input text.`;
+
+    console.log(`🤖 Using ${provider} to split text...`);
+
+    const response = await this.callSplitterAPI(provider, apiKey, systemPrompt, text);
+    
+    try {
+      // The AI might wrap the JSON in markdown, so we need to extract it.
+      const jsonMatch = response.text.match(/```json\n([\s\S]*?)\n```/);
+      const jsonString = jsonMatch ? jsonMatch[1] : response.text;
+      const parsed = JSON.parse(jsonString);
+      return parsed;
+    } catch (error) {
+      console.error('Failed to parse AI response as JSON:', response.text);
+      throw new Error('AI returned an invalid format. Please try again.');
+    }
+  }
+
+  /**
+   * Call Vercel serverless API for the text splitting task
+   */
+  async callSplitterAPI(provider, apiKey, systemPrompt, userText) {
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+      },
+      body: JSON.stringify({
+        provider,
+        message: userText, // The text to be split is the main message
+        context: {
+          systemPrompt,
+          cardContext: '', // No card context needed for this task
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || `API error: ${response.statusText}`);
+    }
+
+    return response.json();
+  }
 }
 
 // Export singleton instance
