@@ -160,3 +160,22 @@ export async function createNewCard() {
 
   console.log('✅ Created new card');
 }
+
+/**
+ * Change the background color of all selected cards
+ * @param {string} color - The new hex color
+ */
+export async function changeSelectedCardsColor(color) {
+  const selectedIds = state.get('selectedCards');
+  if (selectedIds.size === 0) return;
+
+  const updatePromises = [];
+  for (const id of selectedIds) {
+    updatePromises.push(cardFactory.updateCard(id, { backgroundColor: color }));
+  }
+
+  await Promise.all(updatePromises);
+
+  statusNotification.showTemporary(`🎨 Changed color for ${selectedIds.size} card(s)`);
+  console.log(`🎨 Changed color for ${selectedIds.size} card(s)`);
+}

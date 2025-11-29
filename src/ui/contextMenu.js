@@ -2,6 +2,9 @@
  * Context Menu for bulk card operations
  */
 
+import { CARD_COLOR_PALETTE } from '../utils/constants.js';
+import { changeSelectedCardsColor, deleteSelectedCards } from './cardOperations.js';
+
 class ContextMenu {
   constructor() {
     this.menu = null;
@@ -17,9 +20,14 @@ class ContextMenu {
     this.menu.className = 'context-menu hidden';
     document.body.appendChild(this.menu);
 
-    // Hide on outside click
+    // Hide on outside click or escape key
     document.addEventListener('click', (e) => {
       if (this.isOpen && !this.menu.contains(e.target)) {
+        this.hide();
+      }
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && this.isOpen) {
         this.hide();
       }
     });
@@ -29,20 +37,43 @@ class ContextMenu {
    * Show the context menu at a specific position
    * @param {number} x - X coordinate
    * @param {number} y - Y coordinate
-   * @param {Array} selectedCards - The currently selected cards
+   * @param {Array} selectedCards - The currently selected card IDs
    */
   show(x, y, selectedCards) {
     if (!this.menu) this.init();
 
-    // TODO: Populate menu with dynamic options based on selectedCards
+    const colorPaletteHTML = CARD_COLOR_PALETTE.map(color =>
+      `<div class="color-swatch" data-color="${color}" style="background-color: ${color};"></div>`
+    ).join('');
+
     this.menu.innerHTML = `
       <ul>
-        <li>Change Color</li>
-        <li>Manage Tags</li>
+        <li class="submenu-parent">
+          <span>🎨 Change Color</span>
+          <div class="submenu color-palette">
+            ${colorPaletteHTML}
+          </div>
+        </li>
+        <li>🏷️ Manage Tags</li>
         <li class="separator"></li>
-        <li>Delete ${selectedCards.length} cards</li>
+        <li id="delete-cards-btn">🗑️ Delete ${selectedCards.length} cards</li>
       </ul>
     `;
+
+    // Add event listeners
+    this.menu.querySelectorAll('.color-swatch').forEach(swatch => {
+      swatch.addEventListener('click', (e) => {
+        const color = e.target.dataset.color;
+        changeSelectedCardsColor(color);
+        this.hide();
+      });
+    });
+
+    this.menu.querySelector('#delete-cards-btn').addEventListener('click', () => {
+      deleteSelectedCards();
+      this.hide();
+    });
+
 
     this.menu.style.left = `${x}px`;
     this.menu.style.top = `${y}px`;

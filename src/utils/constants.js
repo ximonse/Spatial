@@ -29,6 +29,14 @@ export const COLORS = {
   TEXT_PRIMARY: '#111827',
   TEXT_SECONDARY: '#6B7280',
   CANVAS_BG: '#F9FAFB',
+  CARD_COLOR_PALETTE: [
+    '#FFFFFF', // Default
+    '#FEF3C7', // Light Yellow
+    '#DBEAFE', // Light Blue
+    '#DCFCE7', // Light Green
+    '#FEE2E2', // Light Red
+    '#F3E8FF', // Light Purple
+  ],
 };
 
 // Themes
