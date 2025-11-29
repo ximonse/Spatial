@@ -229,7 +229,12 @@ export class SpatialNoteApp {
 
       const target = e.target;
       console.log('[_setupContextMenu] Event target:', target);
-      const targetCard = cardFactory.getCardByNode(target);
+      let targetCard = null;
+      // Check if the target is a Konva node that represents a card
+      if (target && target.id() && target.id().startsWith('card-')) {
+        const cardId = parseInt(target.id().replace('card-', ''));
+        targetCard = cardFactory.getCard(cardId);
+      }
       console.log('[_setupContextMenu] Target card:', targetCard);
 
       if (targetCard) {
