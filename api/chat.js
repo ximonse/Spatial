@@ -18,22 +18,18 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Missing provider or message' });
     }
 
-    // Get API keys from environment variables
-    const claudeKey = process.env.CLAUDE_API_KEY;
-    const geminiKey = process.env.GEMINI_API_KEY;
+    // Get API key from header (sent from client's localStorage)
+    const apiKey = req.headers['x-api-key'];
+    if (!apiKey) {
+      return res.status(401).json({ error: 'Missing API key' });
+    }
 
     let response;
 
     if (provider === 'claude') {
-      if (!claudeKey) {
-        return res.status(500).json({ error: 'Claude API key not configured' });
-      }
-      response = await callClaude(claudeKey, message, context);
+      response = await callClaude(apiKey, message, context);
     } else if (provider === 'gemini') {
-      if (!geminiKey) {
-        return res.status(500).json({ error: 'Gemini API key not configured' });
-      }
-      response = await callGemini(geminiKey, message, context);
+      response = await callGemini(apiKey, message, context);
     } else {
       return res.status(400).json({ error: 'Invalid provider' });
     }

@@ -55,6 +55,12 @@ class AssistantOrchestrator {
     // Get provider (use specified or default)
     const selectedProvider = provider || settingsPanel.getDefaultProvider();
 
+    // Check API key
+    const apiKey = settingsPanel.getApiKey(selectedProvider);
+    if (!apiKey) {
+      throw new Error(`Ingen API-nyckel för ${selectedProvider}. Öppna inställningar för att lägga till.`);
+    }
+
     // Build context
     const { context, relevantCards, strategy, intent } = contextBuilder.buildContext(userMessage, cards);
 
@@ -72,7 +78,7 @@ class AssistantOrchestrator {
     }
 
     // Call serverless API
-    const response = await this.callServerlessAPI(selectedProvider, userMessage, context, intent);
+    const response = await this.callServerlessAPI(selectedProvider, apiKey, userMessage, context, intent);
 
     // Add response to history
     this.conversationHistory.push({
@@ -94,18 +100,20 @@ class AssistantOrchestrator {
   /**
    * Call Vercel serverless API
    * @param {string} provider - 'claude' or 'gemini'
+   * @param {string} apiKey - API key from localStorage
    * @param {string} message - User message
    * @param {string} cardContext - Card context
    * @param {Object} intent - Parsed intent
    * @returns {Promise<Object>} - { text: string, provider: string }
    */
-  async callServerlessAPI(provider, message, cardContext, intent) {
+  async callServerlessAPI(provider, apiKey, message, cardContext, intent) {
     const systemPrompt = this.buildSystemPrompt(intent);
 
     const response = await fetch('/api/chat', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'x-api-key': apiKey,
       },
       body: JSON.stringify({
         provider,
