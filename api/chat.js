@@ -30,8 +30,10 @@ export default async function handler(req, res) {
       response = await callClaude(apiKey, message, context);
     } else if (provider === 'gemini') {
       response = await callGemini(apiKey, message, context);
+    } else if (provider === 'openai') {
+      response = await callOpenAI(apiKey, message, context);
     } else {
-      return res.status(400).json({ error: 'Invalid provider' });
+      return res.status(400).json({ error: 'Invalid provider. Must be claude, gemini, or openai.' });
     }
 
     return res.status(200).json(response);
@@ -114,5 +116,43 @@ async function callGemini(apiKey, message, context) {
   return {
     text: data.candidates[0].content.parts[0].text,
     provider: 'gemini',
+  };
+}
+
+/**
+ * Call OpenAI API
+ */
+async function callOpenAI(apiKey, message, context) {
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o',
+      max_tokens: 2000,
+      messages: [
+        {
+          role: 'system',
+          content: context.systemPrompt,
+        },
+        {
+          role: 'user',
+          content: `${context.cardContext}\n\n---\n\nFråga: ${message}`,
+        },
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(`OpenAI API error: ${error.error?.message || response.statusText}`);
+  }
+
+  const data = await response.json();
+  return {
+    text: data.choices[0].message.content,
+    provider: 'openai',
   };
 }

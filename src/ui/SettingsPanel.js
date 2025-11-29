@@ -64,6 +64,22 @@ class SettingsPanel {
                 <button class="toggle-visibility" data-target="gemini-api-key" title="Visa/dölj">👁️</button>
               </div>
             </div>
+
+            <div class="settings-field">
+              <label for="openai-api-key">
+                OpenAI API-nyckel
+                <a href="https://platform.openai.com/api-keys" target="_blank" title="Hämta nyckel">🔗</a>
+              </label>
+              <div class="api-key-input">
+                <input
+                  type="password"
+                  id="openai-api-key"
+                  placeholder="sk-..."
+                  autocomplete="off"
+                />
+                <button class="toggle-visibility" data-target="openai-api-key" title="Visa/dölj">👁️</button>
+              </div>
+            </div>
           </section>
 
           <section class="settings-section">
@@ -71,6 +87,7 @@ class SettingsPanel {
             <select id="default-ai-provider">
               <option value="claude">Claude (bättre reasoning)</option>
               <option value="gemini">Gemini (snabbare, billigare)</option>
+              <option value="openai">ChatGPT (gpt-4o)</option>
             </select>
           </section>
         </div>
@@ -136,10 +153,12 @@ class SettingsPanel {
   loadSettings() {
     const claudeKey = localStorage.getItem('claude_api_key') || '';
     const geminiKey = localStorage.getItem('gemini_api_key') || '';
+    const openaiKey = localStorage.getItem('openai_api_key') || '';
     const defaultProvider = localStorage.getItem('default_ai_provider') || 'claude';
 
     document.getElementById('claude-api-key').value = claudeKey;
     document.getElementById('gemini-api-key').value = geminiKey;
+    document.getElementById('openai-api-key').value = openaiKey;
     document.getElementById('default-ai-provider').value = defaultProvider;
   }
 
@@ -149,10 +168,12 @@ class SettingsPanel {
   saveSettings() {
     const claudeKey = document.getElementById('claude-api-key').value.trim();
     const geminiKey = document.getElementById('gemini-api-key').value.trim();
+    const openaiKey = document.getElementById('openai-api-key').value.trim();
     const defaultProvider = document.getElementById('default-ai-provider').value;
 
     localStorage.setItem('claude_api_key', claudeKey);
     localStorage.setItem('gemini_api_key', geminiKey);
+    localStorage.setItem('openai_api_key', openaiKey);
     localStorage.setItem('default_ai_provider', defaultProvider);
 
     this.showNotification('✅ Inställningar sparade!');
@@ -168,10 +189,12 @@ class SettingsPanel {
 
     localStorage.removeItem('claude_api_key');
     localStorage.removeItem('gemini_api_key');
+    localStorage.removeItem('openai_api_key');
     localStorage.removeItem('default_ai_provider');
 
     document.getElementById('claude-api-key').value = '';
     document.getElementById('gemini-api-key').value = '';
+    document.getElementById('openai-api-key').value = '';
     document.getElementById('default-ai-provider').value = 'claude';
 
     this.showNotification('🗑️ Inställningar rensade!');
@@ -241,7 +264,7 @@ class SettingsPanel {
    * @returns {boolean}
    */
   hasApiKeys() {
-    return this.getApiKey('claude') !== null || this.getApiKey('gemini') !== null;
+    return this.getApiKey('claude') !== null || this.getApiKey('gemini') !== null || this.getApiKey('openai') !== null;
   }
 }
 
