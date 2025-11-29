@@ -27,6 +27,8 @@ import { chatPanel } from './ChatPanel.js';
 import { settingsPanel } from './SettingsPanel.js';
 import { tagEditor } from './tagEditor.js';
 import { showColorPicker } from './colorPicker.js';
+import { readImageWithGemini } from '../ai/geminiImageProcessor.js'; // Import readImageWithGemini
+import { cardFactory } from '../cards/CardFactory.js'; // Import cardFactory
 
 export class CommandPalette {
   constructor() {
@@ -131,6 +133,32 @@ export class CommandPalette {
         key: '',
         action: () => tagEditor.show(state.getSelectedCards()),
         requiresSelection: true,
+      },
+      {
+        icon: '✨',
+        name: 'Process Selected Image Cards with Gemini AI',
+        key: '',
+        action: async () => {
+          const selectedCardIds = Array.from(state.get('selectedCards'));
+          for (const id of selectedCardIds) {
+            const cardInstance = cardFactory.getCard(id);
+            if (cardInstance && cardInstance.data.type === 'image' && typeof cardInstance.processWithGemini === 'function') {
+              await cardInstance.processWithGemini();
+            }
+          }
+        },
+        requiresSelection: true,
+        filter: (command) => {
+          if (command.name === 'Process Selected Image Cards with Gemini AI') {
+            const selectedIds = Array.from(state.get('selectedCards'));
+            if (selectedIds.length === 0) return false;
+            return selectedIds.every(id => {
+              const card = cardFactory.getCard(id);
+              return card && card.data.type === 'image';
+            });
+          }
+          return true;
+        }
       },
       {
         icon: '💾',
@@ -267,8 +295,9 @@ export class CommandPalette {
   _filterCommands(query) {
     const lowerQuery = query.toLowerCase();
     this.filteredCommands = this.commands.filter(cmd =>
-      cmd.name.toLowerCase().includes(lowerQuery) ||
-      cmd.key.toLowerCase().includes(lowerQuery)
+      (cmd.name.toLowerCase().includes(lowerQuery) ||
+      cmd.key.toLowerCase().includes(lowerQuery)) &&
+      (!cmd.filter || cmd.filter(cmd)) // Apply custom filter if it exists
     );
     this.selectedIndex = 0;
     this._renderCommands();
@@ -332,11 +361,13 @@ export class CommandPalette {
     this.inputEl.value = '';
     
     const selectedCardsCount = state.get('selectedCards').size;
-    if (selectedCardsCount > 0) {
-      this.filteredCommands = [...this.commands];
-    } else {
-      this.filteredCommands = this.commands.filter(cmd => !cmd.requiresSelection);
-    }
+    
+    // Filter commands based on requiresSelection and custom filter
+    this.filteredCommands = this.commands.filter(cmd => {
+      const passesSelection = !cmd.requiresSelection || selectedCardsCount > 0;
+      const passesCustomFilter = !cmd.filter || cmd.filter(cmd);
+      return passesSelection && passesCustomFilter;
+    });
 
     this.selectedIndex = 0;
     this._renderCommands();
