@@ -296,9 +296,6 @@ class ChatPanel {
    * Clear chat history
    */
   clearHistory() {
-    const confirmed = confirm('Rensa hela chathistoriken?');
-    if (!confirmed) return;
-
     this.messages = [];
     assistantOrchestrator.clearHistory();
     this.saveHistory();

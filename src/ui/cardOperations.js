@@ -124,9 +124,6 @@ export async function deleteSelectedCards() {
   const selectedCards = state.getSelectedCards();
   if (selectedCards.length === 0) return;
 
-  const confirmed = confirm(`Delete ${selectedCards.length} card(s)?`);
-  if (!confirmed) return;
-
   const ids = selectedCards.map(c => c.id);
   await cardFactory.deleteCards(ids);
 
