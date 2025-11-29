@@ -86,8 +86,6 @@ class StageManager {
         Math.min(ZOOM.MAX, oldScale + direction * ZOOM.STEP)
       );
 
-      state.set('zoom', newScale);
-
       stage.scale({ x: newScale, y: newScale });
 
       const newPos = {
@@ -96,7 +94,9 @@ class StageManager {
       };
 
       stage.position(newPos);
+      state.set('zoom', newScale); // Update state after stage position/scale
       stage.batchDraw();
+      overlayManager.updateAllOverlays(); // Call after stage is fully updated
     });
 
     // Touch pinch-to-zoom
@@ -124,6 +124,7 @@ class StageManager {
 
         stage.scale({ x: newScale, y: newScale });
         state.set('zoom', newScale);
+        overlayManager.updateAllOverlays(); // Call after stage is fully updated
 
         lastDist = dist;
       }
