@@ -36,6 +36,7 @@ import {
 import { setupKeyboardShortcuts } from './ui/keyboardShortcuts.js';
 import { chatPanel } from './ui/ChatPanel.js';
 import { settingsPanel } from './ui/SettingsPanel.js';
+import { contextMenu } from './ui/contextMenu.js';
 
 export class SpatialNoteApp {
   constructor() {
@@ -63,6 +64,10 @@ export class SpatialNoteApp {
     // Initialize command palette
     commandPalette.init();
     console.log('✅ Command palette initialized');
+
+    // Initialize context menu
+    contextMenu.init();
+    console.log('✅ Context menu initialized');
 
     // Initialize overlay manager
     overlayManager.init();
@@ -103,6 +108,9 @@ export class SpatialNoteApp {
 
     // Subscribe to state changes
     this._setupStateListeners();
+
+    // Setup context menu
+    this._setupContextMenu();
 
     // If no cards exist, create a welcome card
     if (cardCount === 0) {
@@ -168,6 +176,39 @@ export class SpatialNoteApp {
 
     // Keyboard shortcuts
     this._setupKeyboardShortcuts();
+  }
+
+  /**
+   * Setup context menu listener
+   */
+  _setupContextMenu() {
+    const stage = stageManager.getStage();
+    stage.on('contextmenu', (e) => {
+      // Prevent default browser menu
+      e.evt.preventDefault();
+
+      const target = e.target;
+      const targetCard = cardFactory.getCardByNode(target);
+
+      if (targetCard) {
+        const selectedCards = state.get('selectedCards');
+        // If the clicked card is not selected, select only it
+        if (!selectedCards.has(targetCard.data.id)) {
+          state.clearSelection();
+          state.selectCard(targetCard.data.id);
+        }
+
+        // Now, get the selection again as it might have changed
+        const finalSelection = Array.from(state.get('selectedCards'));
+        if (finalSelection.length > 0) {
+          const pos = stage.getPointerPosition();
+          contextMenu.show(pos.x, pos.y, finalSelection);
+        }
+      } else {
+        // Clicked on empty space, hide menu
+        contextMenu.hide();
+      }
+    });
   }
 
   /**
