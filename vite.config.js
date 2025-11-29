@@ -43,11 +43,7 @@ export default defineConfig({
                   return;
                 }
 
-                // Forward to Anthropic API
-                // Update model to stable version if needed
-                if (requestBody.model === 'claude-3-5-sonnet-20241022') {
-                  requestBody.model = 'claude-3-5-sonnet-20240620';
-                }
+                // Forward to Anthropic API (no model modification needed)
 
                 const response = await fetch('https://api.anthropic.com/v1/messages', {
                   method: 'POST',

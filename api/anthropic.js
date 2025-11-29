@@ -30,11 +30,13 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Update model to stable version if needed
+    // Pass through the model as-is, no modification needed
     const requestBody = req.body;
-    if (requestBody.model === 'claude-3-5-sonnet-20241022') {
-      requestBody.model = 'claude-3-5-sonnet-20240620';
-    }
+
+    console.log('📤 Forwarding to Anthropic API:', {
+      model: requestBody.model,
+      maxTokens: requestBody.max_tokens
+    });
 
     // Forward request to Anthropic API
     const response = await fetch('https://api.anthropic.com/v1/messages', {
