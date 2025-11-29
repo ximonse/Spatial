@@ -13,7 +13,7 @@ import { overlayManager } from './cards/overlayManager.js';
 import { columnView } from './ui/columnView.js';
 import { statusNotification } from './ui/statusNotification.js';
 import { boxSelection } from './ui/boxSelection.js';
-import { searchCards } from './utils/search.js';
+import { searchCards } from './search/search.js';
 import { viewportCuller } from './performance/ViewportCuller.js';
 import { setStatusCallback } from './io/imageImport.js';
 import {
@@ -290,8 +290,7 @@ export class SpatialNoteApp {
    * Highlight cards matching search query
    */
   _highlightSearchMatches(query) {
-    const cards = state.get('cards');
-    const matchingIds = searchCards(cards, query);
+    const matchingIds = searchCards(query, stageManager.getLayer());
 
     // Save search results to state
     state.set('searchResults', Array.from(matchingIds));
