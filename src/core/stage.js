@@ -193,6 +193,55 @@ class StageManager {
   }
 
   /**
+   * Zoom and pan the stage to fit an array of nodes
+   * @param {Array<Konva.Node>} nodes - The nodes to fit in the view
+   */
+  zoomToFit(nodes) {
+    if (!nodes || nodes.length === 0) {
+      this.resetView();
+      return;
+    }
+
+    const stage = this.getStage();
+    const PADDING = 0.1; // 10% padding
+
+    // Create a temporary group to get the bounding box of all nodes
+    const tempGroup = new Konva.Group();
+    nodes.forEach(node => tempGroup.add(node));
+    const box = tempGroup.getClientRect();
+    
+    if (box.width === 0 || box.height === 0) {
+      this.resetView();
+      return;
+    }
+
+    const stageWidth = stage.width();
+    const stageHeight = stage.height();
+
+    const scaleX = stageWidth / box.width;
+    const scaleY = stageHeight / box.height;
+    const scale = Math.min(scaleX, scaleY) * (1 - PADDING);
+
+    const newScale = Math.max(ZOOM.MIN, Math.min(ZOOM.MAX, scale));
+
+    const newPos = {
+      x: -box.x * newScale + (stageWidth - box.width * newScale) / 2,
+      y: -box.y * newScale + (stageHeight - box.height * newScale) / 2,
+    };
+
+    stage.to({
+      x: newPos.x,
+      y: newPos.y,
+      scaleX: newScale,
+      scaleY: newScale,
+      duration: 0.3,
+      easing: Konva.Easings.EaseInOut,
+    });
+
+    state.set('zoom', newScale);
+  }
+
+  /**
    * Destroy stage
    */
   destroy() {

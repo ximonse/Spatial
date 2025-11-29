@@ -184,6 +184,10 @@ export function setupKeyboardShortcuts(app) {
           deleteSelectedCards();
         }
         break;
+      
+      case '-':
+        app.zoomToFit();
+        break;
     }
   });
 }

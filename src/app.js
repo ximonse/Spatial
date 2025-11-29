@@ -105,6 +105,7 @@ export class SpatialNoteApp {
 
     // Setup UI interactions
     this._setupUI();
+    this._setupZoomButton();
 
     // Subscribe to state changes
     this._setupStateListeners();
@@ -119,6 +120,36 @@ export class SpatialNoteApp {
 
     this.initialized = true;
     console.log('✅ Spatial Note ready!');
+  }
+
+  /**
+   * Setup zoom-to-fit button
+   */
+  _setupZoomButton() {
+    const zoomBtn = document.getElementById('floating-command-btn');
+    zoomBtn?.addEventListener('click', () => this.zoomToFit());
+  }
+
+  /**
+   * Zoom and pan to fit selected cards, or all cards if none are selected
+   */
+  zoomToFit() {
+    const selectedIds = Array.from(state.get('selectedCards'));
+    
+    let targetIds = [];
+    if (selectedIds.length > 0) {
+      targetIds = selectedIds;
+    } else {
+      targetIds = cardFactory.getAllCards().map(card => card.data.id);
+    }
+
+    if (targetIds.length === 0) {
+      stageManager.resetView();
+      return;
+    }
+
+    const nodes = targetIds.map(id => cardFactory.getCardNodeById(id)).filter(Boolean);
+    stageManager.zoomToFit(nodes);
   }
 
   /**
