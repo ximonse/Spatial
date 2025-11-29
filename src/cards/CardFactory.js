@@ -56,13 +56,16 @@ export class CardFactory {
    * Load card from database
    */
   async loadCard(cardData) {
+    console.log(`[CardFactory] Loading card: ${cardData.id}, type: ${cardData.type}`);
     const card = this._instantiateCard(cardData);
     const group = await card.create();
+    console.log(`[CardFactory] Card ${cardData.id} created Konva group.`);
 
     stageManager.getCardLayer().add(group);
 
     this.cards.set(cardData.id, card);
     state.addCard(cardData);
+    console.log(`[CardFactory] Card ${cardData.id} loaded and added to state.`);
 
     return card;
   }

@@ -26,6 +26,7 @@ export class TextCard {
    * Create Konva group for this card
    */
   create() {
+    console.log(`[TextCard] Creating Konva group for TextCard: ${this.data.id}`);
     const theme = state.get('theme');
 
     // Main group
