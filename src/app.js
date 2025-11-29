@@ -42,6 +42,7 @@ import { setupDrawing } from './ui/drawing.js'; // Import setupDrawing
 export class SpatialNoteApp {
   constructor() {
     this.initialized = false;
+    this.db = db;
   }
 
   /**
