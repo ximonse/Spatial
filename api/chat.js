@@ -85,35 +85,92 @@ async function callClaude(apiKey, message, context) {
 async function callGemini(apiKey, message, context) {
   const prompt = `${context.systemPrompt}\n\n${context.cardContext}\n\n---\n\nFråga: ${message}`;
 
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: prompt,
-          }],
-        }],
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 2000,
-        },
-      }),
-    }
-  );
+  const candidateEndpoints = [
+    { version: 'v1', models: ['gemini-1.5-flash-latest', 'gemini-1.5-pro-latest', 'gemini-1.5-flash', 'gemini-1.0-pro'] },
+    { version: 'v1beta', models: ['gemini-1.5-flash-latest', 'gemini-1.5-pro-latest', 'gemini-1.5-flash', 'gemini-1.0-pro'] },
+  ];
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(`Gemini API error: ${error.error?.message || response.statusText}`);
+  let lastError = null;
+  const tried = [];
+  const attemptErrors = [];
+
+  for (const { version, models } of candidateEndpoints) {
+    for (const model of models) {
+      const url = `https://generativelanguage.googleapis.com/${version}/models/${model}:generateContent?key=${apiKey}`;
+      tried.push(`${version}/${model}`);
+
+      let response;
+      try {
+        response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{
+                text: prompt,
+              }],
+            }],
+            generationConfig: {
+              temperature: 0.7,
+              maxOutputTokens: 2000,
+            },
+          }),
+        });
+      } catch (fetchError) {
+        lastError = fetchError.message || String(fetchError);
+        attemptErrors.push(`${version}/${model}: ${lastError}`);
+        continue;
+      }
+
+      if (response.ok) {
+        const data = await response.json();
+        const candidate = data.candidates?.[0];
+        const textPart = candidate?.content?.parts?.find(part => part.text)?.text;
+
+        if (textPart) {
+          return { text: textPart, provider: 'gemini' };
+        }
+
+        const finishReason = candidate?.finishReason;
+        const blockReason = data.promptFeedback?.blockReason;
+        const safetyReasons = data.promptFeedback?.safetyRatings
+          ?.map(rating => rating.category)
+          ?.join(', ');
+
+        const reasonParts = [blockReason, finishReason, safetyReasons && `säkerhet: ${safetyReasons}`]
+          .filter(Boolean)
+          .join(' | ');
+
+        lastError = `svar saknar text (${reasonParts || 'okänt skäl'})`;
+        attemptErrors.push(`${version}/${model}: ${lastError}`);
+        continue;
+      }
+
+      const contentType = response.headers.get('content-type') || '';
+      const error = contentType.includes('application/json')
+        ? await response.json().catch(() => ({ error: { message: response.statusText } }))
+        : { error: { message: await response.text().catch(() => response.statusText) } };
+
+      lastError = error.error?.message || response.statusText;
+      attemptErrors.push(`${version}/${model}: ${lastError} (status: ${response.status})`);
+
+      const errorMessage = lastError.toLowerCase();
+      const isMissingModel =
+        response.status === 404 ||
+        errorMessage.includes('not found') ||
+        errorMessage.includes('not supported for generatecontent');
+
+      if (!isMissingModel) {
+        throw new Error(`Gemini API error (${version}/${model}): ${lastError}`);
+      }
+    }
   }
 
-  const data = await response.json();
-  return {
-    text: data.candidates[0].content.parts[0].text,
-    provider: 'gemini',
-  };
+  throw new Error(
+    `Gemini API error: ${lastError || 'Okänd modell'} (försökte modeller: ${tried.join(', ')})${
+      attemptErrors.length ? ` | fel: ${attemptErrors.join(' | ')}` : ''
+    }`
+  );
 }
