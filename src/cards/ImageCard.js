@@ -9,6 +9,7 @@ import { state } from '../core/state.js';
 import { ImageContentOverlay } from './ImageContentOverlay.js';
 import { setupCardInteractions } from './cardInteractions.js';
 import { db } from '../core/db.js';
+import { readImageWithGemini } from '../ai/geminiImageProcessor.js';
 
 export class ImageCard {
   constructor(cardData) {
@@ -22,6 +23,13 @@ export class ImageCard {
     this.imageObj = null;
     this.isSelected = false;
     this.isSearchMatch = true;
+  }
+
+  /**
+   * Process this image card with Gemini AI
+   */
+  async processWithGemini() {
+    await readImageWithGemini(this.data.id);
   }
 
   /**
