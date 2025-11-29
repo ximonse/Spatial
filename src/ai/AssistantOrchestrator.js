@@ -55,12 +55,6 @@ class AssistantOrchestrator {
     // Get provider (use specified or default)
     const selectedProvider = provider || settingsPanel.getDefaultProvider();
 
-    // Check API key
-    const apiKey = settingsPanel.getApiKey(selectedProvider);
-    if (!apiKey) {
-      throw new Error(`Ingen API-nyckel för ${selectedProvider}. Öppna inställningar för att lägga till.`);
-    }
-
     // Build context
     const { context, relevantCards, strategy, intent } = contextBuilder.buildContext(userMessage, cards);
 
@@ -77,15 +71,8 @@ class AssistantOrchestrator {
       this.conversationHistory = this.conversationHistory.slice(-this.maxHistoryLength * 2);
     }
 
-    // Call appropriate AI provider
-    let response;
-    if (selectedProvider === 'claude') {
-      response = await this.callClaude(apiKey, userMessage, context, intent);
-    } else if (selectedProvider === 'gemini') {
-      response = await this.callGemini(apiKey, userMessage, context, intent);
-    } else {
-      throw new Error(`Okänd AI-provider: ${selectedProvider}`);
-    }
+    // Call serverless API
+    const response = await this.callServerlessAPI(selectedProvider, userMessage, context, intent);
 
     // Add response to history
     this.conversationHistory.push({
@@ -102,6 +89,41 @@ class AssistantOrchestrator {
       provider: selectedProvider,
       relevantCards,
     };
+  }
+
+  /**
+   * Call Vercel serverless API
+   * @param {string} provider - 'claude' or 'gemini'
+   * @param {string} message - User message
+   * @param {string} cardContext - Card context
+   * @param {Object} intent - Parsed intent
+   * @returns {Promise<Object>} - { text: string, provider: string }
+   */
+  async callServerlessAPI(provider, message, cardContext, intent) {
+    const systemPrompt = this.buildSystemPrompt(intent);
+
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        provider,
+        message,
+        context: {
+          systemPrompt,
+          cardContext,
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || `API error: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data;
   }
 
   /**
