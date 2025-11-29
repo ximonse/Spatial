@@ -25,6 +25,8 @@ import { importZoteroNotes } from '../io/zoteroImport.js';
 import { importImage } from '../io/imageImport.js';
 import { chatPanel } from './ChatPanel.js';
 import { settingsPanel } from './SettingsPanel.js';
+import { tagEditor } from './tagEditor.js';
+import { showColorPicker } from './colorPicker.js';
 
 export class CommandPalette {
   constructor() {
@@ -114,6 +116,21 @@ export class CommandPalette {
         name: 'Delete Selected',
         key: 'Del',
         action: () => deleteSelectedCards(),
+        requiresSelection: true,
+      },
+      {
+        icon: '🎨',
+        name: 'Change Color of Selected Cards',
+        key: '',
+        action: () => showColorPicker(),
+        requiresSelection: true,
+      },
+      {
+        icon: '🏷️',
+        name: 'Manage Tags of Selected Cards',
+        key: '',
+        action: () => tagEditor.show(state.getSelectedCards()),
+        requiresSelection: true,
       },
       {
         icon: '💾',
@@ -313,7 +330,14 @@ export class CommandPalette {
   open() {
     this.paletteEl.classList.remove('hidden');
     this.inputEl.value = '';
-    this.filteredCommands = [...this.commands];
+    
+    const selectedCardsCount = state.get('selectedCards').size;
+    if (selectedCardsCount > 0) {
+      this.filteredCommands = [...this.commands];
+    } else {
+      this.filteredCommands = this.commands.filter(cmd => !cmd.requiresSelection);
+    }
+
     this.selectedIndex = 0;
     this._renderCommands();
     setTimeout(() => {
