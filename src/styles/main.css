@@ -1182,3 +1182,27 @@ body {
   border-color: #9CA3AF;
   color: #111827;
 }
+
+.active-provider-indicator {
+  margin-left: 10px;
+  padding: 3px 8px;
+  border-radius: 5px;
+  font-size: 0.8em;
+  background-color: var(--bg-secondary);
+  color: var(--text-secondary);
+}
+
+.active-provider-indicator.provider-claude {
+  background-color: #e0e7ff; /* Ljusblå */
+  color: #4338ca; /* Mörkblå */
+}
+
+.active-provider-indicator.provider-gemini {
+  background-color: #ffe0b2; /* Ljusorange */
+  color: #e65100; /* Mörkare orange */
+}
+
+.active-provider-indicator.provider-openai {
+  background-color: #d0f0c0; /* Ljusgrön */
+  color: #2e7d32; /* Mörkgrön */
+}

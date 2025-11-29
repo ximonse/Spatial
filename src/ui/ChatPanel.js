@@ -197,7 +197,12 @@ class ChatPanel {
     `;
 
     messagesContainer.appendChild(messageEl);
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+    // Scroll to bottom
+    const chatBody = this.panel.querySelector('.chat-body');
+    setTimeout(() => {
+      chatBody.scrollTop = chatBody.scrollHeight;
+    }, 0);
 
     // Save message
     this.messages.push({ role, content, cardRefs, timestamp: Date.now() });
