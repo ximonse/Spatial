@@ -351,6 +351,18 @@ export class CommandPalette {
   close() {
     this.paletteEl.classList.add('hidden');
   }
+
+  /**
+   * Execute a command by its name
+   * @param {string} name - The name of the command to execute
+   */
+  executeCommandByName(name) {
+    const command = this.commands.find(cmd => cmd.name === name);
+    if (command) {
+      command.action();
+      this.close(); // Close palette after executing
+    }
+  }
 }
 
 // Export singleton instance
