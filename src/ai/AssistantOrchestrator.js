@@ -131,24 +131,7 @@ class AssistantOrchestrator {
    */
   async callGemini(apiKey, userMessage, context, intent) {
     const systemPrompt = this.buildSystemPrompt(intent);
-
     const prompt = `${systemPrompt}\n\n${context}\n\n---\n\nFråga: ${userMessage}`;
-
-    const payload = {
-      contents: [{
-        parts: [{
-          text: prompt,
-        }],
-      }],
-      generationConfig: {
-        temperature: 0.7,
-        maxOutputTokens: 2000,
-      },
-    };
-
-    const headers = {
-      'Content-Type': 'application/json',
-    };
 
     // Try a small matrix of versions/models to avoid merge-conflict style regressions when
     // upstream API availability shifts (e.g. "model not found" for the latest flash SKU).
@@ -170,8 +153,20 @@ class AssistantOrchestrator {
         try {
           response = await fetch(url, {
             method: 'POST',
-            headers,
-            body: JSON.stringify(payload),
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              contents: [{
+                parts: [{
+                  text: prompt,
+                }],
+              }],
+              generationConfig: {
+                temperature: 0.7,
+                maxOutputTokens: 2000,
+              },
+            }),
           });
         } catch (fetchError) {
           lastError = fetchError.message || String(fetchError);
@@ -210,6 +205,9 @@ class AssistantOrchestrator {
 
         lastError = error.error?.message || response.statusText;
         attemptErrors.push(`${version}/${model}: ${lastError} (status: ${response.status})`);
+        const error = await response.json().catch(() => ({ error: { message: response.statusText } }));
+        lastError = error.error?.message || response.statusText;
+        attemptErrors.push(`${version}/${model}: ${lastError}`);
 
         const message = lastError.toLowerCase();
         const isMissingModel =
@@ -270,84 +268,4 @@ class AssistantOrchestrator {
   /**
    * Build system prompt based on intent
    * @param {Object} intent - Parsed intent
-   * @returns {string} - System prompt
-   */
-  buildSystemPrompt(intent) {
-    let prompt = `Du är en AI-assistent för Spatial Note, en spatial anteckningsapp.
-
-KORT-FORMAT:
-- Varje kort har: [id] content | tags | kommentarer | @(x,y) | datum
-- Tags börjar med #
-- Position @(x,y) anger var kortet finns på canvas
-
-SPATIAL PRINCIPER:
-- Kort är 200×150px (A7-format)
-- 15-20px mellanrum = samma grupp/koncept
-- 200-300px mellanrum = olika grupper/koncept
-
-DIN UPPGIFT:
-- Svara kort och koncist på svenska
-- Referera till kort med [id] när relevant
-- Vid spatial analys: beakta positioner och gruppering`;
-
-    if (intent.hasArrangement) {
-      prompt += `\n- När användaren vill arrangera: föreslå vilket kortkommando de kan använda:
-  * V = vertikal kolumn
-  * H = horisontell rad
-  * G = grid
-  * Q = cirkel
-  * G+V = grid vertikal (kolumner)
-  * G+H = grid horisontell (rader)
-  * G+T = Kanban-layout`;
-    }
-
-    if (intent.hasSearch) {
-      prompt += `\n- Lista kort-ID:n [id] så användaren kan se vilka kort som matchar`;
-    }
-
-    return prompt;
-  }
-
-  /**
-   * Parse card references from AI response
-   * Looks for [id] patterns in text
-   * @param {string} text - AI response
-   * @param {Array} cards - Relevant cards
-   * @returns {Array} - Array of card IDs
-   */
-  parseCardReferences(text, cards) {
-    const references = [];
-    const idPattern = /\[([a-zA-Z0-9-]+)\]/g;
-    let match;
-
-    while ((match = idPattern.exec(text)) !== null) {
-      const shortId = match[1];
-      // Find full card ID that starts with this short ID
-      const card = cards.find(c => c.id.startsWith(shortId));
-      if (card && !references.includes(card.id)) {
-        references.push(card.id);
-      }
-    }
-
-    return references;
-  }
-
-  /**
-   * Clear conversation history
-   */
-  clearHistory() {
-    this.conversationHistory = [];
-    console.log('🗑️ Conversation history cleared');
-  }
-
-  /**
-   * Get conversation history
-   * @returns {Array} - Conversation history
-   */
-  getHistory() {
-    return this.conversationHistory;
-  }
-}
-
-// Export singleton instance
-export const assistantOrchestrator = new AssistantOrchestrator();
+   * @returns {string} -
