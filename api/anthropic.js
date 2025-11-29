@@ -16,6 +16,12 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Update model to stable version if needed
+    const requestBody = req.body;
+    if (requestBody.model === 'claude-3-5-sonnet-20241022') {
+      requestBody.model = 'claude-3-5-sonnet-20240620';
+    }
+
     // Forward request to Anthropic API
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -24,7 +30,7 @@ export default async function handler(req, res) {
         'x-api-key': apiKey,
         'anthropic-version': '2023-06-01',
       },
-      body: JSON.stringify(req.body),
+      body: JSON.stringify(requestBody),
     });
 
     // Get response data
