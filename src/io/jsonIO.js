@@ -89,9 +89,7 @@ export async function importFromJSON() {
           return;
         }
 
-        // Clear existing cards
-        await cardFactory.clearAll();
-        await db.clearAll();
+
 
         // Import cards
         for (const cardData of data.cards) {
