@@ -37,7 +37,7 @@ import { setupKeyboardShortcuts } from './ui/keyboardShortcuts.js';
 import { chatPanel } from './ui/ChatPanel.js';
 import { settingsPanel } from './ui/SettingsPanel.js';
 import { contextMenu } from './ui/contextMenu.js';
-import { setupDrawing } from './ui/drawing.js'; // Import setupDrawing
+
 
 export class SpatialNoteApp {
   constructor() {
@@ -55,9 +55,7 @@ export class SpatialNoteApp {
     stageManager.init('canvas-container');
     console.log('✅ Konva stage initialized');
 
-    // Setup drawing functionality
-    setupDrawing(stageManager.getStage(), stageManager.getDrawingLayer());
-    console.log('✅ Drawing functionality initialized');
+
 
     // Load cards from database
     const cardCount = await cardFactory.loadAllCards();
