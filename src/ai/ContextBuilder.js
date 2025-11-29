@@ -209,7 +209,7 @@ class ContextBuilder {
   formatCard(card, index) {
     const content = (card.content || 'Tom anteckning').substring(0, 100);
     const tags = (card.tags || []).join(' ');
-    const comments = card.comments ? ` | ${card.comments.substring(0, 50)}` : '';
+    const comments = card.comments ? ` | ${String(card.comments).substring(0, 50)}` : '';
     const position = `@(${Math.round(card.x || 0)},${Math.round(card.y || 0)})`;
     const date = card.modified ? ` | ${new Date(card.modified).toLocaleDateString('sv-SE')}` : '';
     const cardId = String(card.id).substring(0, 8);
