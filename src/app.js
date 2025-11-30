@@ -16,6 +16,7 @@ import { boxSelection } from './ui/boxSelection.js';
 import { searchCards } from './search/search.js';
 import { viewportCuller } from './performance/ViewportCuller.js';
 import { setStatusCallback } from './io/imageImport.js';
+import { backupImageCards, restoreImageCards } from './core/imageBackup.js';
 import {
   arrangeVertical,
   arrangeHorizontal,
@@ -58,8 +59,17 @@ export class SpatialNoteApp {
 
 
     // Load cards from database
-    const cardCount = await cardFactory.loadAllCards();
+    let cardCount = await cardFactory.loadAllCards();
     console.log(`✅ Loaded ${cardCount} cards from database`);
+
+    // If IndexedDB was wiped (common in private/incognito mode), fall back to localStorage backup
+    if (cardCount === 0) {
+      const restored = await restoreImageCards(cardFactory);
+      if (restored > 0) {
+        cardCount = restored;
+        console.log(`✅ Restored ${restored} image card(s) from local backup`);
+      }
+    }
 
     // Initialize card editor
     cardEditor.init();
@@ -116,6 +126,9 @@ export class SpatialNoteApp {
 
     // Setup context menu
     this._setupContextMenu();
+
+    // Keep a lightweight backup of image cards in localStorage
+    backupImageCards();
 
     // If no cards exist, create a welcome card
     if (cardCount === 0) {
