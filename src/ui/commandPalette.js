@@ -135,14 +135,14 @@ export class CommandPalette {
       },
       ...['gemini', 'openai'].map((provider) => ({
         icon: '✨',
-        name: `Process Selected Image Cards with ${this._getProviderLabel(provider)}`,
+        name: `Process Selected Image Cards with ${this._getImageProviderLabel()} AI`,
         key: '',
         action: async () => {
           const selectedCardIds = Array.from(state.get('selectedCards'));
           for (const id of selectedCardIds) {
             const cardInstance = cardFactory.getCard(id);
             if (cardInstance && cardInstance.data.type === 'image' && typeof cardInstance.processImageWithAI === 'function') {
-              await cardInstance.processImageWithAI(provider);
+              await cardInstance.processImageWithAI();
             }
           }
         },
@@ -246,10 +246,6 @@ export class CommandPalette {
   _getImageProviderLabel() {
     const provider = settingsPanel.getImageProcessorProvider();
     return provider === 'openai' ? 'ChatGPT' : 'Gemini';
-  }
-
-  _getProviderLabel(provider) {
-    return provider === 'openai' ? 'ChatGPT Vision' : 'Gemini AI';
   }
 
   /**

@@ -111,12 +111,12 @@ export class CardEditor {
       this.save();
     });
 
-    // AI OCR buttons
-    const triggerOcr = async (provider = null) => {
+    // AI OCR button
+    this.geminiOcrBtn?.addEventListener('click', async () => {
       if (this.currentCardId) {
         const cardInstance = cardFactory.getCard(this.currentCardId);
         if (cardInstance && typeof cardInstance.processImageWithAI === 'function') {
-          await cardInstance.processImageWithAI(provider);
+          await cardInstance.processImageWithAI();
           // After processing, update the editor with new content/tags
           const updatedCardData = state.getCard(this.currentCardId);
           this.textareaEl.value = updatedCardData.content || '';
@@ -181,23 +181,12 @@ export class CardEditor {
       this.commentsEl.value = cardData.comments || '';
     }
 
-    // Show/hide AI OCR buttons based on card type and configured keys
+    // Show/hide AI OCR button based on card type
     if (cardInstance && cardInstance.data.type === 'image') {
-      const selectedProvider = settingsPanel.getImageProcessorProvider();
-      const hasGeminiKey = Boolean(settingsPanel.getApiKey('gemini'));
-      const hasOpenAIKey = Boolean(settingsPanel.getApiKey('openai'));
-
-      if (this.geminiOcrBtn) {
-        const geminiLabel = selectedProvider === 'gemini' ? '✨ OCR with Gemini (default)' : '✨ OCR with Gemini AI';
-        this.geminiOcrBtn.textContent = geminiLabel;
-        this.geminiOcrBtn.classList.toggle('hidden', !(hasGeminiKey || selectedProvider === 'gemini'));
-      }
-
-      if (this.openaiOcrBtn) {
-        const openaiLabel = selectedProvider === 'openai' ? '✨ OCR with ChatGPT (default)' : '✨ OCR with ChatGPT Vision';
-        this.openaiOcrBtn.textContent = openaiLabel;
-        this.openaiOcrBtn.classList.toggle('hidden', !(hasOpenAIKey || selectedProvider === 'openai'));
-      }
+      const provider = settingsPanel.getImageProcessorProvider();
+      const providerLabel = provider === 'openai' ? 'ChatGPT' : 'Gemini';
+      this.geminiOcrBtn.textContent = `✨ OCR with ${providerLabel} AI`;
+      this.geminiOcrBtn.classList.remove('hidden');
     } else {
       this.geminiOcrBtn?.classList.add('hidden');
       this.openaiOcrBtn?.classList.add('hidden');

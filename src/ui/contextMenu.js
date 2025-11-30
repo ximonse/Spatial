@@ -56,26 +56,10 @@ class ContextMenu {
       return card && card.data.type === 'image';
     });
 
-    const providerSelection = settingsPanel.getImageProcessorProvider();
-    const hasGeminiKey = Boolean(settingsPanel.getApiKey('gemini'));
-    const hasOpenAIKey = Boolean(settingsPanel.getApiKey('openai'));
-
+    const providerLabel = settingsPanel.getImageProcessorProvider() === 'openai' ? 'ChatGPT' : 'Gemini';
     let aiOptionHTML = '';
     if (allSelectedAreImageCards) {
-      const providerButtons = [];
-
-      if (hasGeminiKey || providerSelection === 'gemini') {
-        providerButtons.push({ id: 'process-with-gemini-btn', label: 'Gemini AI', provider: 'gemini', needsKey: !hasGeminiKey });
-      }
-
-      if (hasOpenAIKey || providerSelection === 'openai') {
-        providerButtons.push({ id: 'process-with-openai-btn', label: 'ChatGPT Vision', provider: 'openai', needsKey: !hasOpenAIKey });
-      }
-
-      aiOptionHTML = providerButtons.map(({ id, label, provider, needsKey }) => {
-        const suffix = needsKey ? ' (add API key in Settings)' : '';
-        return `<li class="process-ai-btn" id="${id}" data-provider="${provider}">✨ Process with ${label}${suffix}</li>`;
-      }).join('');
+      aiOptionHTML = `<li id="process-with-gemini-btn">✨ Process with ${providerLabel} AI</li>`;
     }
 
     this.menu.innerHTML = `
@@ -114,14 +98,11 @@ class ContextMenu {
     });
 
     if (allSelectedAreImageCards) {
-      this.menu.querySelectorAll('.process-ai-btn').forEach(btn => {
-        btn.addEventListener('click', async (event) => {
-          const provider = event.currentTarget.dataset.provider;
-          for (const id of selectedIds) {
-            const imageCardInstance = cardFactory.getCard(id);
-            if (imageCardInstance && typeof imageCardInstance.processImageWithAI === 'function') {
-              await imageCardInstance.processImageWithAI(provider);
-            }
+      this.menu.querySelector('#process-with-gemini-btn').addEventListener('click', async () => {
+        for (const id of selectedIds) {
+          const imageCardInstance = cardFactory.getCard(id);
+          if (imageCardInstance && typeof imageCardInstance.processImageWithAI === 'function') {
+            await imageCardInstance.processImageWithAI();
           }
           this.hide();
         });

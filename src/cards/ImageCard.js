@@ -50,6 +50,8 @@ export class ImageCard {
       return this.processWithGemini();
     } else if (provider === 'openai') {
       return this.processWithOpenAI();
+    } else {
+      console.warn('No valid image processing provider selected.');
     }
 
     console.warn('No valid image processing provider selected.');
