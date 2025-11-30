@@ -6,6 +6,7 @@
 import { state } from '../core/state.js';
 import { cardFactory } from '../cards/CardFactory.js'; // Import cardFactory
 import { marked } from 'marked';
+import { settingsPanel } from './SettingsPanel.js';
 
 export class CardEditor {
   constructor() {
@@ -105,12 +106,12 @@ export class CardEditor {
       this.save();
     });
 
-    // Gemini OCR button
+    // AI OCR button
     this.geminiOcrBtn?.addEventListener('click', async () => {
       if (this.currentCardId) {
         const cardInstance = cardFactory.getCard(this.currentCardId);
-        if (cardInstance && typeof cardInstance.processWithGemini === 'function') {
-          await cardInstance.processWithGemini();
+        if (cardInstance && typeof cardInstance.processImageWithAI === 'function') {
+          await cardInstance.processImageWithAI();
           // After processing, update the editor with new content/tags
           const updatedCardData = state.getCard(this.currentCardId);
           this.textareaEl.value = updatedCardData.content || '';
@@ -172,8 +173,11 @@ export class CardEditor {
       this.commentsEl.value = cardData.comments || '';
     }
 
-    // Show/hide Gemini OCR button based on card type
+    // Show/hide AI OCR button based on card type
     if (cardInstance && cardInstance.data.type === 'image') {
+      const provider = settingsPanel.getImageProcessorProvider();
+      const providerLabel = provider === 'openai' ? 'ChatGPT' : 'Gemini';
+      this.geminiOcrBtn.textContent = `✨ OCR with ${providerLabel} AI`;
       this.geminiOcrBtn.classList.remove('hidden');
     } else {
       this.geminiOcrBtn.classList.add('hidden');
