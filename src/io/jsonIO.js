@@ -91,8 +91,10 @@ export async function importFromJSON() {
 
 
 
-        // Import cards
+        // Import cards and persist them before rendering so updates stick
         for (const cardData of data.cards) {
+          // Save directly to IndexedDB to retain original IDs
+          await db.cards.put({ ...cardData, id: cardData.id });
           await cardFactory.loadCard(cardData);
         }
 
