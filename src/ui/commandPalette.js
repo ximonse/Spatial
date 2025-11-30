@@ -133,7 +133,7 @@ export class CommandPalette {
         action: () => tagEditor.show(state.getSelectedCards()),
         requiresSelection: true,
       },
-      {
+      ...['gemini', 'openai'].map((provider) => ({
         icon: '✨',
         name: `Process Selected Image Cards with ${this._getImageProviderLabel()} AI`,
         key: '',
@@ -151,14 +151,20 @@ export class CommandPalette {
           if (command.name.startsWith('Process Selected Image Cards with')) {
             const selectedIds = Array.from(state.get('selectedCards'));
             if (selectedIds.length === 0) return false;
-            return selectedIds.every(id => {
+            const allImages = selectedIds.every(id => {
               const card = cardFactory.getCard(id);
               return card && card.data.type === 'image';
             });
+
+            const hasKey = Boolean(settingsPanel.getApiKey(provider));
+            const matchesSelection = provider === settingsPanel.getImageProcessorProvider();
+
+            // Show if a key exists OR the provider is the currently selected one (to allow prompt to add key)
+            return allImages && (hasKey || matchesSelection);
           }
           return true;
         }
-      },
+      })),
       {
         icon: '💾',
         name: 'Export to JSON',

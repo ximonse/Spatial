@@ -104,8 +104,8 @@ class ContextMenu {
           if (imageCardInstance && typeof imageCardInstance.processImageWithAI === 'function') {
             await imageCardInstance.processImageWithAI();
           }
-        }
-        this.hide();
+          this.hide();
+        });
       });
     }
 

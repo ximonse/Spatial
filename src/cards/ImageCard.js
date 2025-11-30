@@ -44,8 +44,8 @@ export class ImageCard {
   /**
    * Process this image card with AI
    */
-  async processImageWithAI() {
-    const provider = settingsPanel.getImageProcessorProvider();
+  async processImageWithAI(providerOverride = null) {
+    const provider = providerOverride || settingsPanel.getImageProcessorProvider();
     if (provider === 'gemini') {
       return this.processWithGemini();
     } else if (provider === 'openai') {
@@ -53,6 +53,8 @@ export class ImageCard {
     } else {
       console.warn('No valid image processing provider selected.');
     }
+
+    console.warn('No valid image processing provider selected.');
   }
 
   /**

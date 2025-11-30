@@ -17,6 +17,7 @@ export class CardEditor {
     this.commentsEl = null;
     this.currentCardId = null;
     this.geminiOcrBtn = null; // Reference to the Gemini OCR button
+    this.openaiOcrBtn = null; // Reference to the OpenAI OCR button
   }
 
   /**
@@ -56,7 +57,10 @@ export class CardEditor {
               placeholder="Comment (e.g: författare: Simon, deadline: 2024-12-31)"
               style="padding: 8px 12px; border: 1px solid #E5E7EB; border-radius: 6px; font-size: 14px;"
             />
-            <button id="gemini-ocr-btn" class="btn-secondary hidden" style="margin-top: 10px;">✨ OCR with Gemini AI</button>
+            <div id="ocr-button-row" style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <button id="gemini-ocr-btn" class="btn-secondary hidden" style="margin-top: 10px;">✨ OCR with Gemini AI</button>
+              <button id="openai-ocr-btn" class="btn-secondary hidden" style="margin-top: 10px;">✨ OCR with ChatGPT Vision</button>
+            </div>
           </div>
           <div class="editor-preview">
             <h4>Preview</h4>
@@ -78,6 +82,7 @@ export class CardEditor {
     this.tagsEl = document.getElementById('editor-tags');
     this.commentsEl = document.getElementById('editor-comments');
     this.geminiOcrBtn = document.getElementById('gemini-ocr-btn');
+    this.openaiOcrBtn = document.getElementById('openai-ocr-btn');
   }
 
   /**
@@ -120,7 +125,10 @@ export class CardEditor {
           this._updatePreview();
         }
       }
-    });
+    };
+
+    this.geminiOcrBtn?.addEventListener('click', () => triggerOcr('gemini'));
+    this.openaiOcrBtn?.addEventListener('click', () => triggerOcr('openai'));
 
     // Click outside to close
     this.editorEl?.addEventListener('click', (e) => {
@@ -180,7 +188,8 @@ export class CardEditor {
       this.geminiOcrBtn.textContent = `✨ OCR with ${providerLabel} AI`;
       this.geminiOcrBtn.classList.remove('hidden');
     } else {
-      this.geminiOcrBtn.classList.add('hidden');
+      this.geminiOcrBtn?.classList.add('hidden');
+      this.openaiOcrBtn?.classList.add('hidden');
     }
 
     // Update preview
