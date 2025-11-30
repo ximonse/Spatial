@@ -66,7 +66,9 @@ export function setupCardInteractions(card) {
   // Drag move - move all selected cards together
   group.on('dragmove', () => {
     const pos = card.getPosition();
-    card.contentOverlay.setPosition(pos.x, pos.y);
+    if (card.contentOverlay) {
+      card.contentOverlay.setPosition(pos.x, pos.y);
+    }
 
     if (isDraggingMultiple && dragStartPositions.size > 0) {
       const currentPos = card.getPosition();
