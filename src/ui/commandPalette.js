@@ -7,7 +7,6 @@ import { state } from '../core/state.js';
 import {
   arrangeVertical,
   arrangeHorizontal,
-  arrangeGrid,
   arrangeCircle,
   arrangeGridVertical,
   arrangeGridHorizontal,
@@ -47,122 +46,25 @@ export class CommandPalette {
    */
   _setupCommands() {
     this.commands = [
-      {
-        icon: '📝',
-        name: 'New Card',
-        key: 'N',
-        action: () => createNewCard(),
-      },
-      {
-        icon: '↕️',
-        name: 'Arrange Vertical',
-        key: 'V',
-        action: () => arrangeVertical(),
-      },
-      {
-        icon: '↔️',
-        name: 'Arrange Horizontal',
-        key: 'H',
-        action: () => arrangeHorizontal(),
-      },
-      {
-        icon: '▦',
-        name: 'Arrange Grid',
-        key: 'G',
-        action: () => arrangeGrid(),
-      },
-      {
-        icon: '⭕',
-        name: 'Arrange Circle',
-        key: 'Q',
-        action: () => arrangeCircle(),
-      },
-      {
-        icon: '⬇️',
-        name: 'Arrange Grid Vertical',
-        key: 'G+V',
-        action: () => arrangeGridVertical(),
-      },
-      {
-        icon: '➡️',
-        name: 'Arrange Grid Horizontal',
-        key: 'G+H',
-        action: () => arrangeGridHorizontal(),
-      },
-      {
-        icon: '📊',
-        name: 'Arrange Kanban',
-        key: 'G+T',
-        action: () => arrangeKanban(),
-      },
-      {
-        icon: '☑️',
-        name: 'Select All',
-        key: 'Ctrl+A',
-        action: () => state.selectAll(),
-      },
-      {
-        icon: '❌',
-        name: 'Clear Selection',
-        key: 'Esc',
-        action: () => state.clearSelection(),
-      },
-      {
-        icon: '🗑️',
-        name: 'Delete Selected',
-        key: 'Del',
-        action: () => deleteSelectedCards(),
-      },
-      {
-        icon: '💾',
-        name: 'Export to JSON',
-        key: 'S',
-        action: () => exportToJSON(),
-      },
-      {
-        icon: '📥',
-        name: 'Import from JSON',
-        key: 'L',
-        action: () => importFromJSON(),
-      },
-      {
-        icon: '🗜️',
-        name: 'Create Backup (ZIP)',
-        key: 'B',
-        action: () => createBackup(),
-      },
-      {
-        icon: '📦',
-        name: 'Restore from Backup',
-        key: 'R',
-        action: () => restoreBackup(),
-      },
-      {
-        icon: '📋',
-        name: 'Multi-Import from Text',
-        key: 'M',
-        action: () => multiImportFromText(),
-      },
-      {
-        icon: '🖼️',
-        name: 'Import Image',
-        key: 'I',
-        action: () => importImage(),
-      },
-      {
-        icon: '📤',
-        name: 'Export to Text',
-        key: 'E',
-        action: () => showExportDialog(),
-      },
-      {
-        icon: '📚',
-        name: 'Import from Zotero',
-        key: 'Z',
-        action: () => importZoteroNotes(),
-      },
+      { icon: 'NC', name: 'New Card', key: 'N', action: () => createNewCard() },
+      { icon: 'V', name: 'Arrange Vertical', key: 'V', action: () => arrangeVertical() },
+      { icon: 'H', name: 'Arrange Horizontal', key: 'H', action: () => arrangeHorizontal() },
+      { icon: 'STK', name: 'Arrange Stack', key: 'Q', action: () => arrangeCircle() },
+      { icon: 'GV', name: 'Arrange Grid Vertical', key: 'G+V', action: () => arrangeGridVertical() },
+      { icon: 'GH', name: 'Arrange Grid Horizontal', key: 'G+H', action: () => arrangeGridHorizontal() },
+      { icon: 'GT', name: 'Arrange Overlapping Rows', key: 'G+T', action: () => arrangeKanban() },
+      { icon: 'ALL', name: 'Select All', key: 'Ctrl+A', action: () => state.selectAll() },
+      { icon: 'CLR', name: 'Clear Selection', key: 'Esc', action: () => state.clearSelection() },
+      { icon: 'DEL', name: 'Delete Selected', key: 'Del', action: () => deleteSelectedCards() },
+      { icon: 'EXP', name: 'Export to JSON', key: 'S', action: () => exportToJSON() },
+      { icon: 'IMP', name: 'Import from JSON', key: 'L', action: () => importFromJSON() },
+      { icon: 'BKP', name: 'Create Backup (ZIP)', key: 'B', action: () => createBackup() },
+      { icon: 'RST', name: 'Restore from Backup', key: 'R', action: () => restoreBackup() },
+      { icon: 'MULTI', name: 'Multi-Import from Text', key: 'M', action: () => multiImportFromText() },
+      { icon: 'IMG', name: 'Import Image', key: 'I', action: () => importImage() },
+      { icon: 'TXT', name: 'Export to Text', key: 'E', action: () => showExportDialog() },
+      { icon: 'ZOT', name: 'Import from Zotero', key: 'Z', action: () => importZoteroNotes() },
     ];
-
     this.filteredCommands = [...this.commands];
   }
 

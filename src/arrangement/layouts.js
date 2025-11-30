@@ -25,7 +25,7 @@ export async function arrangeVertical() {
   const positions = calculateVerticalLayout(selectedCards, startPos);
   await applyPositionsToCards(positions);
 
-  console.log(`✅ Arranged ${selectedCards.length} cards vertically`);
+  console.log(`Arranged ${selectedCards.length} cards vertically`);
 }
 
 /**
@@ -39,7 +39,7 @@ export async function arrangeHorizontal() {
   const positions = calculateHorizontalLayout(selectedCards, startPos);
   await applyPositionsToCards(positions);
 
-  console.log(`✅ Arranged ${selectedCards.length} cards horizontally`);
+  console.log(`Arranged ${selectedCards.length} cards horizontally`);
 }
 
 /**
@@ -53,26 +53,21 @@ export async function arrangeGrid(columns = 0) {
   const positions = calculateGridLayout(selectedCards, startPos, columns);
   await applyPositionsToCards(positions);
 
-  console.log(`✅ Arranged ${selectedCards.length} cards in ${columns || Math.ceil(Math.sqrt(selectedCards.length))}-column grid`);
+  console.log(`Arranged ${selectedCards.length} cards in ${columns || Math.ceil(Math.sqrt(selectedCards.length))}-column grid`);
 }
 
 /**
- * Arrange cards in circle/cluster
+ * Arrange cards in a stacked pile
  */
 export async function arrangeCircle() {
   const selectedCards = await getOrPasteCards();
   if (selectedCards.length === 0) return;
 
-  if (selectedCards.length === 1) {
-    console.log('⚠️ Need at least 2 cards for circle arrangement');
-    return;
-  }
-
   const centerPos = getViewportPosition();
   const positions = calculateCircleLayout(selectedCards, centerPos);
   await applyPositionsToCards(positions);
 
-  console.log(`✅ Arranged ${selectedCards.length} cards in circle`);
+  console.log(`Arranged ${selectedCards.length} cards in a stack`);
 }
 
 /**
@@ -87,7 +82,7 @@ export async function arrangeGridVertical() {
   const positions = calculateGridVerticalLayout(selectedCards, startPos);
   await applyPositionsToCards(positions);
 
-  console.log(`✅ Arranged ${selectedCards.length} cards in vertical grid (5 columns)`);
+  console.log(`Arranged ${selectedCards.length} cards in vertical grid (5 columns)`);
 }
 
 /**
@@ -102,11 +97,11 @@ export async function arrangeGridHorizontal() {
   const positions = calculateGridHorizontalLayout(selectedCards, startPos);
   await applyPositionsToCards(positions);
 
-  console.log(`✅ Arranged ${selectedCards.length} cards in horizontal grid (5 columns)`);
+  console.log(`Arranged ${selectedCards.length} cards in horizontal grid (5 columns)`);
 }
 
 /**
- * Arrange cards in Kanban-style overlapping columns
+ * Arrange cards in overlapping rows
  */
 export async function arrangeKanban() {
   const selectedCards = await getOrPasteCards();
@@ -116,5 +111,5 @@ export async function arrangeKanban() {
   const positions = calculateKanbanLayout(selectedCards, startPos);
   await applyPositionsToCards(positions);
 
-  console.log(`✅ Arranged ${selectedCards.length} cards in Kanban style`);
+  console.log(`Arranged ${selectedCards.length} cards in overlapping rows`);
 }

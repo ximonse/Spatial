@@ -7,7 +7,6 @@ import { state } from '../core/state.js';
 import {
   arrangeVertical,
   arrangeHorizontal,
-  arrangeGrid,
   arrangeCircle,
   arrangeGridVertical,
   arrangeGridHorizontal,

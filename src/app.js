@@ -19,7 +19,6 @@ import { setStatusCallback } from './io/imageImport.js';
 import {
   arrangeVertical,
   arrangeHorizontal,
-  arrangeGrid,
   arrangeCircle,
   arrangeGridVertical,
   arrangeGridHorizontal,

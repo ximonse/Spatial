@@ -83,25 +83,26 @@ export function calculateGridLayout(cards, startPos, columns = 0) {
 }
 
 /**
- * Calculate circle layout positions
+ * Calculate stack layout positions (overlapping pile)
  * @param {Array} cards - Card data objects
  * @param {{x: number, y: number}} centerPos - Center position
  * @returns {Object} Map of {cardId: {x, y}}
  */
 export function calculateCircleLayout(cards, centerPos) {
   const positions = {};
-  const centerX = centerPos.x;
-  const centerY = centerPos.y;
+  const baseX = centerPos.x - CARD.WIDTH / 2;
+  const baseY = centerPos.y - CARD.MIN_HEIGHT / 2;
 
-  // Radius based on number of cards
-  const radius = Math.max(150, cards.length * 30);
+  const offsetStep = 6; // slight shift so edges are visible
+  const jitter = 12;    // small random jitter for organic stack
 
   cards.forEach((cardData, index) => {
-    const angle = (index / cards.length) * 2 * Math.PI;
-    const x = centerX + radius * Math.cos(angle) - CARD.WIDTH / 2;
-    const y = centerY + radius * Math.sin(angle) - CARD.MIN_HEIGHT / 2;
-
-    positions[cardData.id] = { x, y };
+    const jitterX = (Math.random() - 0.5) * jitter;
+    const jitterY = (Math.random() - 0.5) * jitter;
+    positions[cardData.id] = {
+      x: baseX + offsetStep * index + jitterX,
+      y: baseY + offsetStep * index + jitterY,
+    };
   });
 
   return positions;
@@ -176,26 +177,25 @@ export function calculateGridHorizontalLayout(cards, startPos) {
 }
 
 /**
- * Calculate Kanban layout (3 columns with overlapping cards)
+ * Calculate overlapping row layout (dense grid rows)
+ * Each new row starts only 50px lower, so cards overlap vertically.
  * @param {Array} cards - Card data objects
  * @param {{x: number, y: number}} startPos - Starting position
  * @returns {Object} Map of {cardId: {x, y}}
  */
 export function calculateKanbanLayout(cards, startPos) {
-  const columns = 3;
-  const cardsPerColumn = Math.ceil(cards.length / columns);
+  const columns = 5;
+  const rowSpacing = 50; // only 50px visible before overlap
   const positions = {};
   const startX = startPos.x;
   const startY = startPos.y;
 
-  const OVERLAP = 30; // Overlap cards in same column
-
   cards.forEach((cardData, index) => {
-    const col = Math.floor(index / cardsPerColumn);
-    const rowInCol = index % cardsPerColumn;
+    const col = index % columns;
+    const row = Math.floor(index / columns);
 
     const x = startX + col * SPACING.GRID_HORIZONTAL;
-    const y = startY + rowInCol * OVERLAP;
+    const y = startY + row * rowSpacing;
 
     positions[cardData.id] = { x, y };
   });
