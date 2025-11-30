@@ -9,6 +9,7 @@ import { cardFactory } from '../cards/CardFactory.js';
 import { stageManager } from '../core/stage.js';
 import { settingsPanel } from '../ui/SettingsPanel.js';
 import { statusNotification } from '../ui/statusNotification.js';
+import { readImageWithOpenAI } from './openaiImageProcessor.js';
 
 /**
  * Calls the Gemini API with the provided image data and a complex prompt.
@@ -91,6 +92,12 @@ OBS: Vi kommer senare även lägga till EXIF-metadata från filen (GPS, filskapa
   return response.json();
 }
 
+function isQuotaExceeded(message) {
+  if (!message) return false;
+  const normalized = message.toLowerCase();
+  return normalized.includes('quota') || normalized.includes('rate limit');
+}
+
 /**
  * Main function to read an image card with Gemini, process the result, and update the card.
  * @param {string} cardId - The ID of the card to process.
@@ -116,7 +123,7 @@ export async function readImageWithGemini(cardId) {
     return;
   }
 
-  statusNotification.showTemporary('✨ Läser bild med Gemini...', 'info', 0); // Show persistent status
+  statusNotification.showTemporary('✨ Läser bild med Gemini...', 2500);
 
   try {
     const response = await callGeminiAPI(apiKey, imageRecord.data);
@@ -157,10 +164,22 @@ export async function readImageWithGemini(cardId) {
     // No longer need to manually reload canvas, stageManager.getLayer().batchDraw() is handled by cardFactory.updateCard
     // stageManager.getLayer().batchDraw();
 
-    statusNotification.showTemporary('✅ Bilden är analyserad!', 'success');
+    statusNotification.showTemporary('✅ Bilden är analyserad!', 2000);
   } catch (error) {
     console.error('Error reading image with Gemini:', error);
-    statusNotification.showTemporary(`❌ Fel vid Gemini-analys: ${error.message}`, 'error');
+    const message = error?.message || 'Okänt fel';
+    if (isQuotaExceeded(message)) {
+      const hasOpenAIKey = Boolean(settingsPanel.getApiKey('openai'));
+      if (hasOpenAIKey) {
+        statusNotification.showTemporary('Gemini-kvot nådd. Byter till OpenAI Vision...', 3500);
+        await readImageWithOpenAI(cardId);
+        return;
+      }
+      statusNotification.showTemporary('Gemini-kvoten är slut. Lägg till en OpenAI-nyckel eller byt provider i inställningarna.', 4000);
+      return;
+    }
+
+    statusNotification.showTemporary(`❌ Fel vid Gemini-analys: ${message}`, 4000);
   } finally {
     // statusNotification.hide(); // Hide persistent status
   }

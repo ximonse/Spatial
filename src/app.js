@@ -227,12 +227,17 @@ export class SpatialNoteApp {
       // Prevent default browser menu
       e.evt.preventDefault();
 
-      const target = e.target;
-      console.log('[_setupContextMenu] Event target:', target);
+      const targetNode = e.target;
+      console.log('[_setupContextMenu] Event target:', targetNode);
       let targetCard = null;
-      // Check if the target is a Konva node that represents a card
-      if (target && target.id() && target.id().startsWith('card-')) {
-        const cardId = parseInt(target.id().replace('card-', ''));
+      // Walk up the Konva tree to find the card group
+      const cardGroup = targetNode?.findAncestor(
+        node => node.id() && node.id().startsWith('card-'),
+        true
+      );
+
+      if (cardGroup && cardGroup.id()) {
+        const cardId = parseInt(cardGroup.id().replace('card-', ''));
         targetCard = cardFactory.getCard(cardId);
       }
       console.log('[_setupContextMenu] Target card:', targetCard);

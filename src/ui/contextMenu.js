@@ -7,6 +7,7 @@ import { changeSelectedCardsColor, deleteSelectedCards } from './cardOperations.
 import { tagEditor } from './tagEditor.js';
 import { state } from '../core/state.js';
 import { cardFactory } from '../cards/CardFactory.js'; // Import cardFactory
+import { settingsPanel } from './SettingsPanel.js';
 
 class ContextMenu {
   constructor() {
@@ -55,9 +56,10 @@ class ContextMenu {
       return card && card.data.type === 'image';
     });
 
-    let geminiOptionHTML = '';
+    const providerLabel = settingsPanel.getImageProcessorProvider() === 'openai' ? 'ChatGPT' : 'Gemini';
+    let aiOptionHTML = '';
     if (allSelectedAreImageCards) {
-      geminiOptionHTML = `<li id="process-with-gemini-btn">✨ Process with Gemini AI</li>`;
+      aiOptionHTML = `<li id="process-with-gemini-btn">✨ Process with ${providerLabel} AI</li>`;
     }
 
     this.menu.innerHTML = `
@@ -69,7 +71,7 @@ class ContextMenu {
           </div>
         </li>
         <li id="manage-tags-btn">🏷️ Manage Tags</li>
-        ${geminiOptionHTML}
+        ${aiOptionHTML}
         <li class="separator"></li>
         <li id="delete-cards-btn">🗑️ Delete ${selectedIds.length} cards</li>
       </ul>
@@ -99,8 +101,8 @@ class ContextMenu {
       this.menu.querySelector('#process-with-gemini-btn').addEventListener('click', async () => {
         for (const id of selectedIds) {
           const imageCardInstance = cardFactory.getCard(id);
-          if (imageCardInstance && typeof imageCardInstance.processWithGemini === 'function') {
-            await imageCardInstance.processWithGemini();
+          if (imageCardInstance && typeof imageCardInstance.processImageWithAI === 'function') {
+            await imageCardInstance.processImageWithAI();
           }
         }
         this.hide();

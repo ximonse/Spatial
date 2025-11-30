@@ -27,7 +27,6 @@ import { chatPanel } from './ChatPanel.js';
 import { settingsPanel } from './SettingsPanel.js';
 import { tagEditor } from './tagEditor.js';
 import { showColorPicker } from './colorPicker.js';
-import { readImageWithGemini } from '../ai/geminiImageProcessor.js'; // Import readImageWithGemini
 import { cardFactory } from '../cards/CardFactory.js'; // Import cardFactory
 
 export class CommandPalette {
@@ -136,20 +135,20 @@ export class CommandPalette {
       },
       {
         icon: '✨',
-        name: 'Process Selected Image Cards with Gemini AI',
+        name: `Process Selected Image Cards with ${this._getImageProviderLabel()} AI`,
         key: '',
         action: async () => {
           const selectedCardIds = Array.from(state.get('selectedCards'));
           for (const id of selectedCardIds) {
             const cardInstance = cardFactory.getCard(id);
-            if (cardInstance && cardInstance.data.type === 'image' && typeof cardInstance.processWithGemini === 'function') {
-              await cardInstance.processWithGemini();
+            if (cardInstance && cardInstance.data.type === 'image' && typeof cardInstance.processImageWithAI === 'function') {
+              await cardInstance.processImageWithAI();
             }
           }
         },
         requiresSelection: true,
         filter: (command) => {
-          if (command.name === 'Process Selected Image Cards with Gemini AI') {
+          if (command.name.startsWith('Process Selected Image Cards with')) {
             const selectedIds = Array.from(state.get('selectedCards'));
             if (selectedIds.length === 0) return false;
             return selectedIds.every(id => {
@@ -236,6 +235,11 @@ export class CommandPalette {
     ];
 
     this.filteredCommands = [...this.commands];
+  }
+
+  _getImageProviderLabel() {
+    const provider = settingsPanel.getImageProcessorProvider();
+    return provider === 'openai' ? 'ChatGPT' : 'Gemini';
   }
 
   /**
