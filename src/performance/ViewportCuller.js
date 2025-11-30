@@ -25,7 +25,7 @@ export class ViewportCuller {
     // Check on pan/zoom
     const stage = stageManager.getStage();
     stage.on('dragend.culler', () => this.cull());
-    stage.on('wheel.culler', () => this.cull());
+    // stage.on('wheel.culler', () => this.cull()); // Temporarily disable for debugging
 
     // Initial cull
     this.cull();
