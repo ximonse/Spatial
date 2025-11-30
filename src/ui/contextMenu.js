@@ -7,6 +7,7 @@ import { changeSelectedCardsColor, deleteSelectedCards } from './cardOperations.
 import { tagEditor } from './tagEditor.js';
 import { state } from '../core/state.js';
 import { cardFactory } from '../cards/CardFactory.js'; // Import cardFactory
+import { settingsPanel } from './SettingsPanel.js';
 
 class ContextMenu {
   constructor() {
@@ -55,9 +56,26 @@ class ContextMenu {
       return card && card.data.type === 'image';
     });
 
-    let geminiOptionHTML = '';
+    const providerSelection = settingsPanel.getImageProcessorProvider();
+    const hasGeminiKey = Boolean(settingsPanel.getApiKey('gemini'));
+    const hasOpenAIKey = Boolean(settingsPanel.getApiKey('openai'));
+
+    let aiOptionHTML = '';
     if (allSelectedAreImageCards) {
-      geminiOptionHTML = `<li id="process-with-gemini-btn">✨ Process with Gemini AI</li>`;
+      const providerButtons = [];
+
+      if (hasGeminiKey || providerSelection === 'gemini') {
+        providerButtons.push({ id: 'process-with-gemini-btn', label: 'Gemini AI', provider: 'gemini', needsKey: !hasGeminiKey });
+      }
+
+      if (hasOpenAIKey || providerSelection === 'openai') {
+        providerButtons.push({ id: 'process-with-openai-btn', label: 'ChatGPT Vision', provider: 'openai', needsKey: !hasOpenAIKey });
+      }
+
+      aiOptionHTML = providerButtons.map(({ id, label, provider, needsKey }) => {
+        const suffix = needsKey ? ' (add API key in Settings)' : '';
+        return `<li class="process-ai-btn" id="${id}" data-provider="${provider}">✨ Process with ${label}${suffix}</li>`;
+      }).join('');
     }
 
     this.menu.innerHTML = `
@@ -69,7 +87,7 @@ class ContextMenu {
           </div>
         </li>
         <li id="manage-tags-btn">🏷️ Manage Tags</li>
-        ${geminiOptionHTML}
+        ${aiOptionHTML}
         <li class="separator"></li>
         <li id="delete-cards-btn">🗑️ Delete ${selectedIds.length} cards</li>
       </ul>
@@ -96,14 +114,17 @@ class ContextMenu {
     });
 
     if (allSelectedAreImageCards) {
-      this.menu.querySelector('#process-with-gemini-btn').addEventListener('click', async () => {
-        for (const id of selectedIds) {
-          const imageCardInstance = cardFactory.getCard(id);
-          if (imageCardInstance && typeof imageCardInstance.processWithGemini === 'function') {
-            await imageCardInstance.processWithGemini();
+      this.menu.querySelectorAll('.process-ai-btn').forEach(btn => {
+        btn.addEventListener('click', async (event) => {
+          const provider = event.currentTarget.dataset.provider;
+          for (const id of selectedIds) {
+            const imageCardInstance = cardFactory.getCard(id);
+            if (imageCardInstance && typeof imageCardInstance.processImageWithAI === 'function') {
+              await imageCardInstance.processImageWithAI(provider);
+            }
           }
-        }
-        this.hide();
+          this.hide();
+        });
       });
     }
 

@@ -27,7 +27,6 @@ import { chatPanel } from './ChatPanel.js';
 import { settingsPanel } from './SettingsPanel.js';
 import { tagEditor } from './tagEditor.js';
 import { showColorPicker } from './colorPicker.js';
-import { readImageWithGemini } from '../ai/geminiImageProcessor.js'; // Import readImageWithGemini
 import { cardFactory } from '../cards/CardFactory.js'; // Import cardFactory
 
 export class CommandPalette {
@@ -134,32 +133,38 @@ export class CommandPalette {
         action: () => tagEditor.show(state.getSelectedCards()),
         requiresSelection: true,
       },
-      {
+      ...['gemini', 'openai'].map((provider) => ({
         icon: '✨',
-        name: 'Process Selected Image Cards with Gemini AI',
+        name: `Process Selected Image Cards with ${this._getProviderLabel(provider)}`,
         key: '',
         action: async () => {
           const selectedCardIds = Array.from(state.get('selectedCards'));
           for (const id of selectedCardIds) {
             const cardInstance = cardFactory.getCard(id);
-            if (cardInstance && cardInstance.data.type === 'image' && typeof cardInstance.processWithGemini === 'function') {
-              await cardInstance.processWithGemini();
+            if (cardInstance && cardInstance.data.type === 'image' && typeof cardInstance.processImageWithAI === 'function') {
+              await cardInstance.processImageWithAI(provider);
             }
           }
         },
         requiresSelection: true,
         filter: (command) => {
-          if (command.name === 'Process Selected Image Cards with Gemini AI') {
+          if (command.name.startsWith('Process Selected Image Cards with')) {
             const selectedIds = Array.from(state.get('selectedCards'));
             if (selectedIds.length === 0) return false;
-            return selectedIds.every(id => {
+            const allImages = selectedIds.every(id => {
               const card = cardFactory.getCard(id);
               return card && card.data.type === 'image';
             });
+
+            const hasKey = Boolean(settingsPanel.getApiKey(provider));
+            const matchesSelection = provider === settingsPanel.getImageProcessorProvider();
+
+            // Show if a key exists OR the provider is the currently selected one (to allow prompt to add key)
+            return allImages && (hasKey || matchesSelection);
           }
           return true;
         }
-      },
+      })),
       {
         icon: '💾',
         name: 'Export to JSON',
@@ -236,6 +241,15 @@ export class CommandPalette {
     ];
 
     this.filteredCommands = [...this.commands];
+  }
+
+  _getImageProviderLabel() {
+    const provider = settingsPanel.getImageProcessorProvider();
+    return provider === 'openai' ? 'ChatGPT' : 'Gemini';
+  }
+
+  _getProviderLabel(provider) {
+    return provider === 'openai' ? 'ChatGPT Vision' : 'Gemini AI';
   }
 
   /**

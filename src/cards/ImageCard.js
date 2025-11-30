@@ -28,17 +28,31 @@ export class ImageCard {
   }
 
   /**
+   * Backwards compatible Gemini-specific trigger
+   */
+  async processWithGemini() {
+    return readImageWithGemini(this.data.id);
+  }
+
+  /**
+   * Backwards compatible OpenAI-specific trigger
+   */
+  async processWithOpenAI() {
+    return readImageWithOpenAI(this.data.id);
+  }
+
+  /**
    * Process this image card with AI
    */
-  async processImageWithAI() {
-    const provider = settingsPanel.getImageProcessorProvider();
+  async processImageWithAI(providerOverride = null) {
+    const provider = providerOverride || settingsPanel.getImageProcessorProvider();
     if (provider === 'gemini') {
-      await readImageWithGemini(this.data.id);
+      return this.processWithGemini();
     } else if (provider === 'openai') {
-      await readImageWithOpenAI(this.data.id);
-    } else {
-      console.warn('No valid image processing provider selected.');
+      return this.processWithOpenAI();
     }
+
+    console.warn('No valid image processing provider selected.');
   }
 
   /**

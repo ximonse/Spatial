@@ -6,6 +6,7 @@
 import { state } from '../core/state.js';
 import { cardFactory } from '../cards/CardFactory.js'; // Import cardFactory
 import { marked } from 'marked';
+import { settingsPanel } from './SettingsPanel.js';
 
 export class CardEditor {
   constructor() {
@@ -16,6 +17,7 @@ export class CardEditor {
     this.commentsEl = null;
     this.currentCardId = null;
     this.geminiOcrBtn = null; // Reference to the Gemini OCR button
+    this.openaiOcrBtn = null; // Reference to the OpenAI OCR button
   }
 
   /**
@@ -55,7 +57,10 @@ export class CardEditor {
               placeholder="Comment (e.g: författare: Simon, deadline: 2024-12-31)"
               style="padding: 8px 12px; border: 1px solid #E5E7EB; border-radius: 6px; font-size: 14px;"
             />
-            <button id="gemini-ocr-btn" class="btn-secondary hidden" style="margin-top: 10px;">✨ OCR with Gemini AI</button>
+            <div id="ocr-button-row" style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <button id="gemini-ocr-btn" class="btn-secondary hidden" style="margin-top: 10px;">✨ OCR with Gemini AI</button>
+              <button id="openai-ocr-btn" class="btn-secondary hidden" style="margin-top: 10px;">✨ OCR with ChatGPT Vision</button>
+            </div>
           </div>
           <div class="editor-preview">
             <h4>Preview</h4>
@@ -77,6 +82,7 @@ export class CardEditor {
     this.tagsEl = document.getElementById('editor-tags');
     this.commentsEl = document.getElementById('editor-comments');
     this.geminiOcrBtn = document.getElementById('gemini-ocr-btn');
+    this.openaiOcrBtn = document.getElementById('openai-ocr-btn');
   }
 
   /**
@@ -105,12 +111,12 @@ export class CardEditor {
       this.save();
     });
 
-    // Gemini OCR button
-    this.geminiOcrBtn?.addEventListener('click', async () => {
+    // AI OCR buttons
+    const triggerOcr = async (provider = null) => {
       if (this.currentCardId) {
         const cardInstance = cardFactory.getCard(this.currentCardId);
-        if (cardInstance && typeof cardInstance.processWithGemini === 'function') {
-          await cardInstance.processWithGemini();
+        if (cardInstance && typeof cardInstance.processImageWithAI === 'function') {
+          await cardInstance.processImageWithAI(provider);
           // After processing, update the editor with new content/tags
           const updatedCardData = state.getCard(this.currentCardId);
           this.textareaEl.value = updatedCardData.content || '';
@@ -119,7 +125,10 @@ export class CardEditor {
           this._updatePreview();
         }
       }
-    });
+    };
+
+    this.geminiOcrBtn?.addEventListener('click', () => triggerOcr('gemini'));
+    this.openaiOcrBtn?.addEventListener('click', () => triggerOcr('openai'));
 
     // Click outside to close
     this.editorEl?.addEventListener('click', (e) => {
@@ -172,11 +181,26 @@ export class CardEditor {
       this.commentsEl.value = cardData.comments || '';
     }
 
-    // Show/hide Gemini OCR button based on card type
+    // Show/hide AI OCR buttons based on card type and configured keys
     if (cardInstance && cardInstance.data.type === 'image') {
-      this.geminiOcrBtn.classList.remove('hidden');
+      const selectedProvider = settingsPanel.getImageProcessorProvider();
+      const hasGeminiKey = Boolean(settingsPanel.getApiKey('gemini'));
+      const hasOpenAIKey = Boolean(settingsPanel.getApiKey('openai'));
+
+      if (this.geminiOcrBtn) {
+        const geminiLabel = selectedProvider === 'gemini' ? '✨ OCR with Gemini (default)' : '✨ OCR with Gemini AI';
+        this.geminiOcrBtn.textContent = geminiLabel;
+        this.geminiOcrBtn.classList.toggle('hidden', !(hasGeminiKey || selectedProvider === 'gemini'));
+      }
+
+      if (this.openaiOcrBtn) {
+        const openaiLabel = selectedProvider === 'openai' ? '✨ OCR with ChatGPT (default)' : '✨ OCR with ChatGPT Vision';
+        this.openaiOcrBtn.textContent = openaiLabel;
+        this.openaiOcrBtn.classList.toggle('hidden', !(hasOpenAIKey || selectedProvider === 'openai'));
+      }
     } else {
-      this.geminiOcrBtn.classList.add('hidden');
+      this.geminiOcrBtn?.classList.add('hidden');
+      this.openaiOcrBtn?.classList.add('hidden');
     }
 
     // Update preview
