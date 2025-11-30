@@ -229,17 +229,38 @@ export class ImageCard {
    */
   updateContent(content, comments = null) {
     this.data.content = content;
+    const displayHeight = this.konvaImage ? this.konvaImage.height() : this.currentHeight;
+
     if (comments !== null) {
       this.data.comments = comments;
+      const hasComments = comments && comments.trim().length > 0;
 
-      // Update comments text below image
+      if (hasComments && !this.commentsText) {
+        this.commentsText = new Konva.Text({
+          x: CARD.PADDING,
+          y: displayHeight + CARD.PADDING / 2,
+          width: CARD.WIDTH - CARD.PADDING * 2,
+          text: comments,
+          fontSize: 12,
+          fontFamily: 'Inter, system-ui, sans-serif',
+          fill: '#6B7280',
+          lineHeight: 1.4,
+          wrap: 'word',
+        });
+
+        this.group.add(this.commentsText);
+      } else if (!hasComments && this.commentsText) {
+        this.commentsText.destroy();
+        this.commentsText = null;
+      }
+
       if (this.commentsText) {
         this.commentsText.text(comments);
-
-        // Recalculate height
-        const displayHeight = this.konvaImage ? this.konvaImage.height() : this.currentHeight;
+        this.commentsText.y(displayHeight + CARD.PADDING / 2);
         const totalHeight = displayHeight + CARD.PADDING / 2 + this.commentsText.height() + CARD.PADDING;
         this._updateHeight(totalHeight);
+      } else if (!hasComments) {
+        this._updateHeight(displayHeight);
       }
     }
 

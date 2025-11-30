@@ -53,7 +53,7 @@ Klicka och dra ett kort för att flytta det. Alla markerade kort flyttas tillsam
 |---------|----------|
 | **N** | Skapa nytt kort |
 | **Space** | Öppna kommandopalett (visa alla kommandon) |
-| **Esc** | Avmarkera alla kort / Rensa sökning |
+| **Esc** | Avmarkera alla kort / Rensa sökning / Stänga fönster |
 | **K** | Växla mellan Board/Column view |
 
 ### Markering & Redigering
@@ -64,6 +64,7 @@ Klicka och dra ett kort för att flytta det. Alla markerade kort flyttas tillsam
 | **Shift+Klick** | Lägg till/ta bort kort från markering |
 | **Ctrl+A** | Markera alla kort |
 | **Dubbelklick** | Redigera kort |
+| **Höger-klick** | visar meny - ändra färg, ändra tagg |
 
 ### Kopiera & Klistra
 
@@ -80,17 +81,17 @@ Klicka och dra ett kort för att flytta det. Alla markerade kort flyttas tillsam
 | **P** | Fäst/lossa markerade kort (pinnning) |
 | **Delete/Backspace** | Ta bort markerade kort |
 
-### Arrangemang
+### Arrangemang (Uppdaterad!!)
 
 | Tangent | Funktion |
 |---------|----------|
 | **V** | Arrangera vertikalt (15px mellanrum) |
 | **H** | Arrangera horisontellt (15px mellanrum) |
-| **G** | Arrangera i grid (5 kort/rad) |
-| **Q** | Arrangera i cirkel |
+| **G** | Arrangera i grid (5 kort/rad) | Viktigt, Ta bort funktion. g ska vara fungera tillsammans med annan tangent
+| **Q** | Arrangera i en hög |
 | **G+V** | Grid vertikalt (kolumner) |
 | **G+H** | Grid horisontellt (rader) |
-| **G+T** | Kanban-layout (3 kolumner) |
+| **G+T** | Grid rader - varje kort visas bara 50px innan kortet under ligger över. |
 
 *Tips: Tryck G följt av V/H/T inom 500ms för kombinationer*
 
@@ -181,22 +182,18 @@ Fästa kort (tryck **P**) får en gul bakgrund och visas som "Pinned" i Column V
 
 Skapa flera kort samtidigt från text:
 
-```
+
 Första kortet här
 Med flera rader text
-#viktigt #projekt &författare: Simon
+#viktigt #projekt &Simon
 
 Andra kortet separerat med dubbel radbrytning
-#arbete
-
-Tredje kortet...
-```
 
 **Format:**
 - Separera kort med **dubbla radbrytningar** (tom rad)
 - Använd `#hashtag` för tags
 - Använd `&kommentar` för metadata/kommentarer
-- Tags och kommentarer tas bort från kortets innehåll
+- Tags och kommentarer visas inte förutom vid editering
 
 **Layout:**
 - Kort skapas i grid (5 kort/rad)
@@ -228,7 +225,7 @@ Välj mellan tre format:
 
 ## Vyer
 
-### Board View
+### Board View / Brädvy
 
 Standard-vyn med en oändlig canvas. Dra runt kort fritt, zooma och panorera.
 
@@ -274,15 +271,9 @@ Arrangemang hjälper dig att:
 - 15px mellanrum
 - Bra för tidslinjer
 
-**Grid (G):**
-- 5 kort per rad
-- 215px horisontellt, 165px vertikalt mellanrum
-- Bra för översikt
 
 **Circle (Q):**
-- Arrangerar i cirkel
-- Alla kort lika långt från mitten
-- Bra för brainstorming
+- Arrangerar kort i en oordnad hög
 
 **Grid Vertical (G+V):**
 - Grid med kolumner
@@ -314,7 +305,7 @@ Arrangemang hjälper dig att:
 
 1. Tryck **N** flera gånger för att skapa kort
 2. Dubbelklicka och skriv idéer
-3. Tryck **Q** för att arrangera i cirkel
+3. Tryck **Q** för att arrangera i en hög
 4. Dra kort närmare varandra (15px) för att gruppera
 5. Tryck **G+V** för att skapa kolumner av grupper
 
@@ -397,10 +388,10 @@ ORGANISERA
 V           Vertikal
 H           Horisontell
 G           Grid
-Q           Cirkel
+Q           stack
 G+V         Grid vertikal
 G+H         Grid horisontell
-G+T         Kanban
+G+T         Överlappande
 
 IMPORT/EXPORT
 S           JSON export

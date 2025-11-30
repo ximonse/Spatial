@@ -15,6 +15,7 @@ export function setupCardInteractions(card) {
 
   // Track multi-drag state
   let dragStartPositions = new Map();
+  let dragOrigin = null;
   let isDraggingMultiple = false;
 
   // Click to select
@@ -48,6 +49,9 @@ export function setupCardInteractions(card) {
       state.selectCard(data.id);
     }
 
+    const startPos = card.getPosition();
+    dragOrigin = { x: startPos.x, y: startPos.y };
+
     const selectedCards = state.getSelectedCards();
     isDraggingMultiple = selectedCards.length > 1;
 
@@ -66,12 +70,14 @@ export function setupCardInteractions(card) {
   // Drag move - move all selected cards together
   group.on('dragmove', () => {
     const pos = card.getPosition();
-    card.contentOverlay.setPosition(pos.x, pos.y);
+    if (card.contentOverlay) {
+      card.contentOverlay.setPosition(pos.x, pos.y);
+    }
 
     if (isDraggingMultiple && dragStartPositions.size > 0) {
       const currentPos = card.getPosition();
-      const deltaX = currentPos.x - data.x;
-      const deltaY = currentPos.y - data.y;
+      const deltaX = currentPos.x - (dragOrigin ? dragOrigin.x : data.x);
+      const deltaY = currentPos.y - (dragOrigin ? dragOrigin.y : data.y);
 
       dragStartPositions.forEach((startPos, cardId) => {
         const cardInstance = cardFactory.getCard(cardId);
@@ -114,5 +120,6 @@ export function setupCardInteractions(card) {
 
     dragStartPositions.clear();
     isDraggingMultiple = false;
+    dragOrigin = null;
   });
 }
