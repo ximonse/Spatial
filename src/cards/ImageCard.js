@@ -10,6 +10,8 @@ import { ImageContentOverlay } from './ImageContentOverlay.js';
 import { setupCardInteractions } from './cardInteractions.js';
 import { db } from '../core/db.js';
 import { readImageWithGemini } from '../ai/geminiImageProcessor.js';
+import { readImageWithOpenAI } from '../ai/openaiImageProcessor.js';
+import { settingsPanel } from '../ui/SettingsPanel.js';
 
 export class ImageCard {
   constructor(cardData) {
@@ -26,10 +28,17 @@ export class ImageCard {
   }
 
   /**
-   * Process this image card with Gemini AI
+   * Process this image card with AI
    */
-  async processWithGemini() {
-    await readImageWithGemini(this.data.id);
+  async processImageWithAI() {
+    const provider = settingsPanel.getImageProcessorProvider();
+    if (provider === 'gemini') {
+      await readImageWithGemini(this.data.id);
+    } else if (provider === 'openai') {
+      await readImageWithOpenAI(this.data.id);
+    } else {
+      console.warn('No valid image processing provider selected.');
+    }
   }
 
   /**

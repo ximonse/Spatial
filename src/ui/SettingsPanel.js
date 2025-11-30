@@ -83,11 +83,19 @@ class SettingsPanel {
           </section>
 
           <section class="settings-section">
-            <h3>🎨 Standard AI-provider</h3>
+            <h3>🤖 Standard AI-provider (Chat)</h3>
             <select id="default-ai-provider">
               <option value="claude">Claude (bättre reasoning)</option>
               <option value="gemini">Gemini (snabbare, billigare)</option>
               <option value="openai">ChatGPT (gpt-4o)</option>
+            </select>
+          </section>
+
+          <section class="settings-section">
+            <h3>🖼️ Bildanalys AI-provider (OCR)</h3>
+            <select id="image-processor-provider">
+              <option value="gemini">Google Gemini</option>
+              <option value="openai">OpenAI Vision</option>
             </select>
           </section>
         </div>
@@ -155,11 +163,13 @@ class SettingsPanel {
     const geminiKey = localStorage.getItem('gemini_api_key') || '';
     const openaiKey = localStorage.getItem('openai_api_key') || '';
     const defaultProvider = localStorage.getItem('default_ai_provider') || 'claude';
+    const imageProcessorProvider = localStorage.getItem('image_processor_provider') || 'gemini'; // Default to Gemini
 
     document.getElementById('claude-api-key').value = claudeKey;
     document.getElementById('gemini-api-key').value = geminiKey;
     document.getElementById('openai-api-key').value = openaiKey;
     document.getElementById('default-ai-provider').value = defaultProvider;
+    document.getElementById('image-processor-provider').value = imageProcessorProvider;
   }
 
   /**
@@ -170,11 +180,13 @@ class SettingsPanel {
     const geminiKey = document.getElementById('gemini-api-key').value.trim();
     const openaiKey = document.getElementById('openai-api-key').value.trim();
     const defaultProvider = document.getElementById('default-ai-provider').value;
+    const imageProcessorProvider = document.getElementById('image-processor-provider').value;
 
     localStorage.setItem('claude_api_key', claudeKey);
     localStorage.setItem('gemini_api_key', geminiKey);
     localStorage.setItem('openai_api_key', openaiKey);
     localStorage.setItem('default_ai_provider', defaultProvider);
+    localStorage.setItem('image_processor_provider', imageProcessorProvider);
 
     this.showNotification('✅ Inställningar sparade!');
     console.log('✅ Settings saved');
@@ -191,11 +203,13 @@ class SettingsPanel {
     localStorage.removeItem('gemini_api_key');
     localStorage.removeItem('openai_api_key');
     localStorage.removeItem('default_ai_provider');
+    localStorage.removeItem('image_processor_provider');
 
     document.getElementById('claude-api-key').value = '';
     document.getElementById('gemini-api-key').value = '';
     document.getElementById('openai-api-key').value = '';
     document.getElementById('default-ai-provider').value = 'claude';
+    document.getElementById('image-processor-provider').value = 'gemini';
 
     this.showNotification('🗑️ Inställningar rensade!');
     console.log('🗑️ Settings cleared');
@@ -243,7 +257,7 @@ class SettingsPanel {
 
   /**
    * Get API key for provider
-   * @param {string} provider - 'claude' or 'gemini'
+   * @param {string} provider - 'claude', 'gemini' or 'openai'
    * @returns {string|null} - API key or null
    */
   getApiKey(provider) {
@@ -252,11 +266,19 @@ class SettingsPanel {
   }
 
   /**
-   * Get default AI provider
-   * @returns {string} - 'claude' or 'gemini'
+   * Get default AI provider for chat
+   * @returns {string} - 'claude', 'gemini' or 'openai'
    */
   getDefaultProvider() {
     return localStorage.getItem('default_ai_provider') || 'claude';
+  }
+
+  /**
+   * Get AI provider for image processing
+   * @returns {string} - 'gemini' or 'openai'
+   */
+  getImageProcessorProvider() {
+    return localStorage.getItem('image_processor_provider') || 'gemini';
   }
 
   /**

@@ -22,6 +22,9 @@ index.html.dev
 .DS_Store
 Thumbs.db
 
+# Inspiration (not part of active project)
+Inspiration_only/
+
 # Logs
 *.log
 npm-debug.log*

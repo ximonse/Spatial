@@ -38,7 +38,7 @@ export function setupKeyboardShortcuts(app) {
     }
 
     const key = e.key.toLowerCase();
-    const now = Date.Now();
+    const now = Date.now();
     let handled = false;
     let searchInput; // Declare searchInput once here
 
