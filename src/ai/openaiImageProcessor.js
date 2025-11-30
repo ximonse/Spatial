@@ -73,6 +73,7 @@ NOTE: We will later also add EXIF metadata from the file (GPS, file creator, ori
         ],
       },
     ],
+    response_format: { type: 'json_object' },
     max_tokens: 2000,
   };
 
@@ -127,7 +128,18 @@ export async function readImageWithOpenAI(cardId) {
       throw new Error('Invalid response structure from OpenAI API.');
     }
 
-    const rawText = response.choices[0].message.content;
+    const messageContent = response.choices[0].message.content;
+    const rawText = Array.isArray(messageContent)
+      ? messageContent
+        .map(part => {
+          if (typeof part === 'string') return part;
+          if (part?.type === 'text') return part.text || '';
+          if (typeof part?.text === 'string') return part.text;
+          return '';
+        })
+        .filter(Boolean)
+        .join('\n')
+      : String(messageContent || '');
 
     let parsedData;
     try {

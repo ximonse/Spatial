@@ -8,6 +8,7 @@ import { CARD_TYPES, SPACING } from '../utils/constants.js';
 import { ImageProcessor } from '../processing/ImageProcessor.js';
 import { db } from '../core/db.js';
 import { state } from '../core/state.js';
+import { backupImageCards } from '../core/imageBackup.js';
 
 let statusCallback = null;
 
@@ -182,6 +183,9 @@ export async function importImage(mode = null) {
           `Successfully imported ${successCount} image(s)`,
           'success'
         );
+
+        // Store a lightweight backup so images persist even if IndexedDB is cleared
+        backupImageCards();
         resolve(true);
       } catch (error) {
         console.error('Image import failed:', error);

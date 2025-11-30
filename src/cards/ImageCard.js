@@ -25,6 +25,8 @@ export class ImageCard {
     this.imageObj = null;
     this.isSelected = false;
     this.isSearchMatch = true;
+    // Image OCR descriptions should stay hidden on the card so the photo remains visible
+    this.showOcrOverlay = cardData.showOcrOverlay === true;
   }
 
   /**
@@ -86,8 +88,8 @@ export class ImageCard {
     // Load and display image
     await this._loadImage();
 
-    // Create OCR text overlay (if content exists)
-    if (this.data.content) {
+    // Create OCR text overlay only when explicitly requested (default is hidden)
+    if (this.data.content && this.showOcrOverlay) {
       this.contentOverlay = new ImageContentOverlay(
         this.data.id,
         this.data.content,
@@ -274,8 +276,8 @@ export class ImageCard {
       }
     }
 
-    // Create overlay if it doesn't exist and content was added
-    if (content && !this.contentOverlay) {
+    // Create overlay if it doesn't exist and content was added AND overlays are enabled
+    if (content && this.showOcrOverlay && !this.contentOverlay) {
       this.contentOverlay = new ImageContentOverlay(
         this.data.id,
         content,
