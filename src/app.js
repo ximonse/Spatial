@@ -33,6 +33,8 @@ import {
   createNewCard
 } from './ui/cardOperations.js';
 import { setupKeyboardShortcuts } from './ui/keyboardShortcuts.js';
+import { chatPanel } from './ui/ChatPanel.js';
+import { settingsPanel } from './ui/SettingsPanel.js';
 
 export class SpatialNoteApp {
   constructor() {
@@ -92,6 +94,7 @@ export class SpatialNoteApp {
 
     // Setup UI interactions
     this._setupUI();
+    this._setupZoomButton();
 
     // Subscribe to state changes
     this._setupStateListeners();
@@ -105,6 +108,39 @@ export class SpatialNoteApp {
     console.log('✅ Spatial Note ready!');
   }
 
+
+  /**
+   * Setup zoom-to-fit button (bottom right magnifier)
+   */
+  _setupZoomButton() {
+    const zoomBtn = document.getElementById('floating-command-btn');
+    zoomBtn?.addEventListener('click', () => this.zoomToFit());
+  }
+
+  /**
+   * Zoom and pan to fit selected cards, or all cards if none are selected
+   */
+  zoomToFit() {
+    const selectedIds = Array.from(state.get('selectedCards'));
+    const targetIds = selectedIds.length > 0
+      ? selectedIds
+      : cardFactory.getAllCards().map(card => card.data.id);
+
+    const nodes = targetIds
+      .map(id => {
+        const card = cardFactory.getCard(id);
+        return card ? card.getGroup() : null;
+      })
+      .filter(Boolean);
+
+    if (nodes.length === 0) {
+      stageManager.resetView();
+      return;
+    }
+
+    stageManager.zoomToFit(nodes);
+  }
+
   /**
    * Setup UI event listeners
    */
@@ -113,6 +149,16 @@ export class SpatialNoteApp {
     const btnCommandPalette = document.getElementById('btn-command-palette');
     btnCommandPalette?.addEventListener('click', () => {
       commandPalette.toggle();
+    });
+
+    const btnAIChat = document.getElementById('btn-ai-chat');
+    btnAIChat?.addEventListener('click', () => {
+      chatPanel.toggle();
+    });
+
+    const btnAISettings = document.getElementById('btn-ai-settings');
+    btnAISettings?.addEventListener('click', () => {
+      settingsPanel.open();
     });
 
     // Toolbar collapse/expand

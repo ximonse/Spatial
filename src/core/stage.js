@@ -193,6 +193,53 @@ class StageManager {
   }
 
   /**
+   * Zoom and pan to fit given Konva nodes (or all cards if omitted)
+   */
+  zoomToFit(nodes, padding = 40) {
+    const stage = this.stage;
+    const targets = nodes && nodes.length ? nodes : [];
+    if (targets.length === 0) return;
+
+    // Calculate bounding box in unscaled coordinates
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    targets.forEach(node => {
+      const box = node.getClientRect({ skipTransform: true });
+      minX = Math.min(minX, box.x);
+      minY = Math.min(minY, box.y);
+      maxX = Math.max(maxX, box.x + box.width);
+      maxY = Math.max(maxY, box.y + box.height);
+    });
+
+    if (!isFinite(minX) || !isFinite(minY) || !isFinite(maxX) || !isFinite(maxY)) {
+      return;
+    }
+
+    const width = maxX - minX + padding * 2;
+    const height = maxY - minY + padding * 2;
+
+    const stageWidth = stage.width();
+    const stageHeight = stage.height();
+
+    const scale = Math.max(
+      ZOOM.MIN,
+      Math.min(ZOOM.MAX, Math.min(stageWidth / width, stageHeight / height))
+    );
+
+    stage.scale({ x: scale, y: scale });
+    state.set('zoom', scale);
+
+    const centerX = minX + width / 2;
+    const centerY = minY + height / 2;
+
+    stage.position({
+      x: stageWidth / 2 - centerX * scale,
+      y: stageHeight / 2 - centerY * scale,
+    });
+
+    stage.batchDraw();
+  }
+
+  /**
    * Destroy stage
    */
   destroy() {

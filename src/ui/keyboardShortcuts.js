@@ -25,6 +25,7 @@ import { createBackup, restoreBackup } from '../io/backup.js';
 import { multiImportFromText } from '../io/multiImport.js';
 import { showExportDialog } from '../io/textExport.js';
 import { importImage } from '../io/imageImport.js';
+import { chatPanel } from './ChatPanel.js';
 
 /**
  * Setup keyboard shortcuts
@@ -113,6 +114,8 @@ export function setupKeyboardShortcuts(app) {
         if (e.ctrlKey || e.metaKey) {
           e.preventDefault();
           copySelectedCards();
+        } else {
+          chatPanel.toggle();
         }
         break;
 

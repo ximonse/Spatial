@@ -22,6 +22,8 @@ import { multiImportFromText } from '../io/multiImport.js';
 import { showExportDialog } from '../io/textExport.js';
 import { importZoteroNotes } from '../io/zoteroImport.js';
 import { importImage } from '../io/imageImport.js';
+import { chatPanel } from './ChatPanel.js';
+import { settingsPanel } from './SettingsPanel.js';
 
 export class CommandPalette {
   constructor() {
@@ -46,6 +48,8 @@ export class CommandPalette {
    */
   _setupCommands() {
     this.commands = [
+      { icon: 'AI', name: 'Open AI Chat', key: 'C', action: () => chatPanel.open() },
+      { icon: 'API', name: 'AI Settings', key: 'API', action: () => settingsPanel.open() },
       { icon: 'NC', name: 'New Card', key: 'N', action: () => createNewCard() },
       { icon: 'V', name: 'Arrange Vertical', key: 'V', action: () => arrangeVertical() },
       { icon: 'H', name: 'Arrange Horizontal', key: 'H', action: () => arrangeHorizontal() },
