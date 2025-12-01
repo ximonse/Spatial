@@ -55,20 +55,8 @@ export class ImageCard {
     // Load and display image
     await this._loadImage();
 
-    // Create OCR text overlay (if content exists)
-    if (this.data.content) {
-      this.contentOverlay = new ImageContentOverlay(
-        this.data.id,
-        this.data.content,
-        this.data.x,
-        this.data.y,
-        this.currentHeight,
-        this.data.comments || '',
-        this.data.backgroundColor || null,
-        this.data.ocrConfidence || null
-      );
-      this.contentOverlay.create();
-    }
+    // Note: We intentionally do NOT overlay OCR text on the image.
+    // Content is available in the editor, but not rendered on the card to avoid covering the image.
 
     // Pin indicator (if pinned)
     if (this.data.pinned) {
@@ -264,22 +252,7 @@ export class ImageCard {
       }
     }
 
-    // Create overlay if it doesn't exist and content was added
-    if (content && !this.contentOverlay) {
-      this.contentOverlay = new ImageContentOverlay(
-        this.data.id,
-        content,
-        this.data.x,
-        this.data.y,
-        this.currentHeight,
-        this.data.comments || '',
-        this.data.backgroundColor || null,
-        this.data.ocrConfidence || null
-      );
-      this.contentOverlay.create();
-    } else if (this.contentOverlay) {
-      this.contentOverlay.updateContent(content, this.data.comments || '');
-    }
+    // We keep OCR content for the editor but do not create an overlay on the card.
   }
 
   /**
