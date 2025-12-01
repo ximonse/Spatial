@@ -8,6 +8,7 @@ import { settingsPanel } from './SettingsPanel.js';
 import { statusNotification } from './statusNotification.js';
 import { readImageWithGemini } from '../ai/geminiImageProcessor.js';
 import { readImageWithOpenAI } from '../ai/openaiImageProcessor.js';
+import { cardFactory } from '../cards/CardFactory.js';
 
 async function processWithProvider(cardId) {
   const provider = settingsPanel.getImageProcessorProvider();
@@ -24,8 +25,8 @@ async function processWithProvider(cardId) {
  * Run OCR on a specific card ID (image cards only)
  */
 export async function runOcrForCard(cardId) {
-  const card = state.getCard(cardId);
-  if (!card || card.type !== CARD_TYPES.IMAGE) {
+  const cardInstance = cardFactory.getCard(cardId);
+  if (!cardInstance || cardInstance.data.type !== CARD_TYPES.IMAGE) {
     statusNotification.showTemporary('OCR works only on image cards', 2500);
     return;
   }
