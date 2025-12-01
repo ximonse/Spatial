@@ -35,6 +35,7 @@ import {
 import { setupKeyboardShortcuts } from './ui/keyboardShortcuts.js';
 import { chatPanel } from './ui/ChatPanel.js';
 import { settingsPanel } from './ui/SettingsPanel.js';
+import { cardContextMenu } from './ui/cardContextMenu.js';
 
 export class SpatialNoteApp {
   constructor() {
@@ -95,6 +96,8 @@ export class SpatialNoteApp {
     // Setup UI interactions
     this._setupUI();
     this._setupZoomButton();
+    // Ensure context menu is initialized
+    cardContextMenu.hide();
 
     // Subscribe to state changes
     this._setupStateListeners();

@@ -773,6 +773,46 @@ body {
   height: 24px;
 }
 
+/* Card Context Menu */
+#card-context-menu {
+  position: fixed;
+  z-index: 2000;
+  background: #111827;
+  color: #F9FAFB;
+  border-radius: 10px;
+  padding: 8px;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.35);
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+#card-context-menu.hidden {
+  display: none;
+}
+
+#card-context-menu .context-item {
+  background: transparent;
+  border: none;
+  color: #F9FAFB;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.15s ease;
+}
+
+#card-context-menu .context-item:hover {
+  background: rgba(255,255,255,0.08);
+}
+
+#card-context-menu .context-item:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 
 /* Toolbar AI buttons */
 .toolbar-btn {
