@@ -78,6 +78,10 @@ export function setupKeyboardShortcuts(app) {
         }
         break;
 
+      case '-':
+        app?.zoomToFit();
+        break;
+
       case 'h':
         arrangeHorizontal();
         break;

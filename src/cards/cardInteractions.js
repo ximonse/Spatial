@@ -44,16 +44,20 @@ export function setupCardInteractions(card) {
     document.body.style.cursor = 'default';
   });
 
-  // Custom context menu
-  group.on('contextmenu', (e) => {
-    e.evt.preventDefault();
-    const pointer = e.evt ? { x: e.evt.clientX, y: e.evt.clientY } : { x: 0, y: 0 };
+  // Custom context menu (supports Konva contentContextmenu)
+  const openMenu = (e) => {
+    const evt = e.evt || e;
+    if (evt?.preventDefault) evt.preventDefault();
+    const pointer = evt ? { x: evt.clientX || 0, y: evt.clientY || 0 } : { x: 0, y: 0 };
     if (!state.isSelected(data.id)) {
       state.clearSelection();
       state.selectCard(data.id);
     }
     cardContextMenu.show(pointer.x, pointer.y);
-  });
+  };
+
+  group.on('contextmenu', openMenu);
+  group.on('contentContextmenu', openMenu);
 
   // Drag start - setup multi-drag
   group.on('dragstart', () => {

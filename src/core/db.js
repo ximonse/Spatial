@@ -80,15 +80,19 @@ class SpatialDB extends Dexie {
    * @param {number} [imageData.fileSize] - File size in bytes
    */
   async saveImage(cardId, imageData) {
+    const payload = typeof imageData === 'string'
+      ? { data: imageData }
+      : imageData || {};
+
     await this.images.put({
       id: cardId,
       cardId,
-      data: imageData.data,
-      processedData: imageData.processedData || null,
-      width: imageData.width || 0,
-      height: imageData.height || 0,
-      format: imageData.format || 'png',
-      fileSize: imageData.fileSize || 0,
+      data: payload.data,
+      processedData: payload.processedData || null,
+      width: payload.width || 0,
+      height: payload.height || 0,
+      format: payload.format || 'png',
+      fileSize: payload.fileSize || 0,
     });
   }
 

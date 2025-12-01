@@ -11,6 +11,36 @@ import { settingsPanel } from '../ui/SettingsPanel.js';
 import { statusNotification } from '../ui/statusNotification.js';
 import { readImageWithOpenAI } from './openaiImageProcessor.js';
 
+// OCR prompt for Gemini: transcribe text and add scene description when applicable
+const geminiOcrPrompt = `Transcribe the text from the image exactly as written and extract metadata.
+
+If the image contains more than just a handwritten note (e.g., a photo or scene), ALSO provide a short visual description (1-2 sentences). If it's only a handwritten note, the description can be null.
+
+Respond ONLY with this JSON:
+{
+  "text": "[transcribed text or empty]",
+  "description": "[short scene/motif description, or null if only handwritten note]",
+  "metadata": {
+    "extractedDate": "YYYY-MM-DD or null",
+    "extractedTime": "HH:MM or null",
+    "extractedDateTime": "YYYY-MM-DDTHH:MM or null",
+    "extractedPeople": ["person1", "person2"] or [],
+    "extractedPlaces": ["place1", "place2"] or []
+  },
+  "hashtags": ["tag1", "tag2", "tag3"]
+}
+
+Hashtag rules:
+1) Date tags #YYMMDD if date found.
+2) Week tags #YYvVV if date known.
+3) Category tags e.g. #mote #anteckning #todo #faktura #kontrakt #brev #kvitto #foto.
+4) Name tags for mentioned people.
+5) Place tags for mentioned locations.
+
+Description rules: Include a short description when there is a scene/motif. Use null if only a handwritten note.
+
+Metadata rules: same as before.`;
+
 /**
  * Calls the Gemini API with the provided image data and a complex prompt.
  * @param {string} apiKey - The Google AI API key.
@@ -25,45 +55,7 @@ async function callGeminiAPI(apiKey, imageData) {
       {
         parts: [
           {
-            text: `Transkribera texten från bilden exakt som den är skriven och extrahera metadata.
-                                                                                                 
-OM BILDEN INTE HAR NÅGON TEXT: Beskriv kort vad bilden visar (1-2 meningar).                      
-                                                                                                 
-VIKTIGT: Svara ENDAST med en JSON-struktur enligt detta format:                                  
-                                                                                                 
-{                                                                                                
-  "text": "[transkriberad text här, eller tom sträng om ingen text]",                            
-  "description": "[kort bildbeskrivning om ingen text finns, annars null]",                       
-  "metadata": {                                                                                  
-    "extractedDate": "YYYY-MM-DD eller null",                                                    
-    "extractedTime": "HH:MM eller null",                                                         
-    "extractedDateTime": "YYYY-MM-DDTHH:MM eller null (kombinera datum+tid)",                    
-    "extractedPeople": ["person1", "person2"] eller [],                                          
-    "extractedPlaces": ["plats1", "plats2"] eller []                                             
-  },                                                                                             
-  "hashtags": ["tag1", "tag2", "tag3"]                                                           
-}                                                                                                
-                                                                                                 
-HASHTAG-REGLER:                                                                                  
-1. Datumtaggar: Om datum hittas, skapa #YYMMDD (ex: #250819 för 2025-08-19)                       
-2. Veckotaggar: Om datum känt, skapa #YYvVV (ex: #25v44 för vecka 44, 2025)                       
-3. Kategoritaggar: #möte #anteckning #todo #faktura #kontrakt #brev #kvitto #foto etc            
-4. Namntaggar: Personer som nämns, normaliserade (ex: #smith #jones)                             
-5. Platstaggar: Platser som nämns (ex: #stockholm #kontoret)                                     
-                                                                                                 
-METADATA-INSTRUKTIONER:                                                                          
-- extractedDate: Extrahera datum från SYNLIG text i bilden (YYYY-MM-DD format)                   
-- extractedTime: Extrahera tid från SYNLIG text (HH:MM format)                                   
-- extractedDateTime: Om både datum OCH tid finns, kombinera till ISO-format (YYYY-MM-DDTHH:MM)   
-- extractedPeople: Lista alla personnamn som nämns i texten                                       
-- extractedPlaces: Lista alla platser/adresser som nämns                                          
-                                                                                                 
-BESKRIVNING-INSTRUKTIONER:                                                                       
-- Om bilden INTE har någon läsbar text: Beskriv kort vad som visas (ex: "En solnedgång över havet", "En katt på en soffa")
-- Om bilden HAR text: Sätt description till null                                                 
-- Håll beskrivningen kort och koncis (max 2 meningar)                                            
-                                                                                                 
-OBS: Vi kommer senare även lägga till EXIF-metadata från filen (GPS, filskapare, originaldatum etc), så håll strukturen ren.`
+            text: geminiOcrPrompt
           },
           {
             inline_data: {
@@ -144,7 +136,10 @@ export async function readImageWithGemini(cardId) {
       parsedData = { text: rawText, hashtags: [] };
     }
 
-    const mainContent = parsedData.text || parsedData.description || '';
+    const parts = [];
+    if (parsedData.text) parts.push(parsedData.text);
+    if (parsedData.description) parts.push(`Beskrivning: ${parsedData.description}`);
+    const mainContent = parts.join('\n\n');
 
     const existingTags = cardData.data.tags || [];
     const newTags = (parsedData.hashtags || []).map(tag => tag.replace('#', ''));
@@ -184,3 +179,4 @@ export async function readImageWithGemini(cardId) {
     // statusNotification.hide(); // Hide persistent status
   }
 }
+

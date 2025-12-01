@@ -19,13 +19,13 @@ async function callOpenAIVisionAPI(apiKey, imageData) {
   // The prompt for OpenAI Vision. It's crucial to match the output format requested for Gemini.
   const prompt = `Transcribe the text from the image exactly as written and extract metadata.
 
-IF THE IMAGE HAS NO TEXT: Briefly describe what the image shows (1-2 sentences).
+If the image contains more than just a handwritten note (e.g., a photo or scene), ALSO provide a visual description (3-5ntences). If it's only a handwritten note, the description can be null but tag it with #handskriven
 
 IMPORTANT: Respond ONLY with a JSON structure according to this format:
 
 {
   "text": "[transcribed text here, or empty string if no text]",
-  "description": "[brief image description if no text, otherwise null]",
+  "description": "[short scene/motif description, or tag it with #handskriven if only a hand  written note]",
   "metadata": {
     "extractedDate": "YYYY-MM-DD or null",
     "extractedTime": "HH:MM or null",
@@ -51,9 +51,9 @@ METADATA INSTRUCTIONS:
 - extractedPlaces: List all places/addresses mentioned
 
 DESCRIPTION INSTRUCTIONS:
-- If the image HAS NO readable text: Briefly describe what is shown (e.g., "A sunset over the sea", "A cat on a sofa")
+- If the image HAS NO readable text: Briefly describe what is shown (e.g., "A sunset over the sea", "A grey furry cat on a green old sofa")
 - If the image HAS text: Set description to null
-- Keep the description short and concise (max 2 sentences)
+- Keep the description short and concise (3-5 sentences)
 
 NOTE: We will later also add EXIF metadata from the file (GPS, file creator, original date etc), so keep the structure clean.`
 
@@ -152,7 +152,10 @@ export async function readImageWithOpenAI(cardId) {
       parsedData = { text: rawText, hashtags: [] };
     }
 
-    const mainContent = parsedData.text || parsedData.description || '';
+    const contentParts = [];
+    if (parsedData.text) contentParts.push(parsedData.text);
+    if (parsedData.description) contentParts.push(`Beskrivning: ${parsedData.description}`);
+    const mainContent = contentParts.join('\n\n');
 
     const existingTags = cardData.data.tags || [];
     const newTags = (parsedData.hashtags || []).map(tag => tag.replace('#', ''));

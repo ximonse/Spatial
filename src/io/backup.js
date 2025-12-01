@@ -122,7 +122,7 @@ export async function restoreBackup() {
             const cardId = parseInt(relativePath.replace('.png', ''));
             const base64 = await file.async('base64');
             const dataUrl = `data:image/png;base64,${base64}`;
-            await db.saveImage(cardId, dataUrl);
+            await db.saveImage(cardId, { data: dataUrl });
           }
         }
 

@@ -33,13 +33,6 @@ class CardContextMenu {
       }
     });
 
-    document.addEventListener('contextmenu', (e) => {
-      // Close menu if right-click elsewhere without blocking native browser on non-canvas areas
-      if (!this.menuEl.contains(e.target)) {
-        this.hide();
-      }
-    });
-
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') this.hide();
     });
