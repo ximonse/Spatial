@@ -6,6 +6,8 @@
 import { state } from '../core/state.js';
 import { cardFactory } from './CardFactory.js';
 import { db } from '../core/db.js';
+import { CARD_TYPES } from '../utils/constants.js';
+import { runOcrForCard } from '../ui/imageOcr.js';
 
 /**
  * Setup card interaction handlers
@@ -41,6 +43,21 @@ export function setupCardInteractions(card) {
   group.on('mouseleave', () => {
     document.body.style.cursor = 'default';
   });
+
+  // Right-click OCR for image cards
+  if (data.type === CARD_TYPES.IMAGE) {
+    group.on('contextmenu', (e) => {
+      e.evt.preventDefault();
+      if (!state.isSelected(data.id)) {
+        state.clearSelection();
+        state.selectCard(data.id);
+      }
+      const confirmed = confirm('Run AI OCR on this image?');
+      if (confirmed) {
+        runOcrForCard(data.id);
+      }
+    });
+  }
 
   // Drag start - setup multi-drag
   group.on('dragstart', () => {

@@ -24,6 +24,7 @@ import { importZoteroNotes } from '../io/zoteroImport.js';
 import { importImage } from '../io/imageImport.js';
 import { chatPanel } from './ChatPanel.js';
 import { settingsPanel } from './SettingsPanel.js';
+import { runOcrOnSelection } from './imageOcr.js';
 
 export class CommandPalette {
   constructor() {
@@ -50,6 +51,7 @@ export class CommandPalette {
     this.commands = [
       { icon: 'AI', name: 'Open AI Chat', key: 'C', action: () => chatPanel.open() },
       { icon: 'API', name: 'AI Settings', key: 'API', action: () => settingsPanel.open() },
+      { icon: 'OCR', name: 'OCR selected images', key: 'OCR', action: () => runOcrOnSelection() },
       { icon: 'NC', name: 'New Card', key: 'N', action: () => createNewCard() },
       { icon: 'V', name: 'Arrange Vertical', key: 'V', action: () => arrangeVertical() },
       { icon: 'H', name: 'Arrange Horizontal', key: 'H', action: () => arrangeHorizontal() },

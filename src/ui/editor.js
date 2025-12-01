@@ -6,6 +6,8 @@
 import { state } from '../core/state.js';
 import { cardFactory } from '../cards/CardFactory.js';
 import { marked } from 'marked';
+import { CARD_TYPES } from '../utils/constants.js';
+import { runOcrForCard } from './imageOcr.js';
 
 export class CardEditor {
   constructor() {
@@ -15,6 +17,7 @@ export class CardEditor {
     this.tagsEl = null;
     this.commentsEl = null;
     this.currentCardId = null;
+    this.ocrButton = null;
   }
 
   /**
@@ -62,6 +65,7 @@ export class CardEditor {
         </div>
         <div class="editor-footer">
           <button id="editor-cancel" class="btn-secondary">Cancel (Esc)</button>
+          <button id="editor-ocr" class="btn-secondary hidden">OCR with AI</button>
           <button id="editor-save" class="btn-primary">Save (Ctrl+Enter)</button>
         </div>
       </div>
@@ -74,6 +78,7 @@ export class CardEditor {
     this.previewEl = document.getElementById('editor-preview-content');
     this.tagsEl = document.getElementById('editor-tags');
     this.commentsEl = document.getElementById('editor-comments');
+    this.ocrButton = document.getElementById('editor-ocr');
   }
 
   /**
@@ -100,6 +105,13 @@ export class CardEditor {
     // Save button
     document.getElementById('editor-save')?.addEventListener('click', () => {
       this.save();
+    });
+
+    // OCR button
+    this.ocrButton?.addEventListener('click', async () => {
+      if (this.currentCardId) {
+        await runOcrForCard(this.currentCardId);
+      }
     });
 
     // Click outside to close
@@ -157,6 +169,13 @@ export class CardEditor {
 
     // Show editor
     this.editorEl.classList.remove('hidden');
+
+    // Toggle OCR button visibility for image cards
+    if (cardData.type === CARD_TYPES.IMAGE) {
+      this.ocrButton.classList.remove('hidden');
+    } else {
+      this.ocrButton.classList.add('hidden');
+    }
 
     // Focus textarea
     setTimeout(() => {
