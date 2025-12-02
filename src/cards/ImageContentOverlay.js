@@ -131,21 +131,23 @@ export class ImageContentOverlay {
 
     this.element.style.cssText = `
       position: absolute;
-      left: ${screenX}px;
-      top: ${screenY}px;
-      width: ${CARD.WIDTH * scale}px;
-      min-height: ${CARD.MIN_HEIGHT * scale}px;
-      padding: ${CARD.PADDING * scale}px;
+      left: 0;
+      top: 0;
+      width: ${CARD.WIDTH}px;
+      min-height: ${CARD.MIN_HEIGHT}px;
+      padding: ${CARD.PADDING}px;
       box-sizing: border-box;
       overflow: hidden;
       pointer-events: none;
-      font-size: ${14 * scale}px;
+      font-size: 14px;
       line-height: 1.5;
       color: ${theme.text};
       background: ${this.content ? bgColor : 'transparent'};
       border: ${1 * scale}px solid ${this.selected ? (theme.borderSelected || theme.border) : theme.border};
-      border-radius: ${CARD.CORNER_RADIUS * scale}px;
+      border-radius: ${CARD.CORNER_RADIUS}px;
       opacity: ${this.visible ? (this.isSearchMatch ? opacity : 0.3) : 0};
+      transform: translate(${screenX}px, ${screenY}px) scale(${scale});
+      transform-origin: top left;
       transition: opacity 0.2s, border-width 0.1s;
     `;
   }

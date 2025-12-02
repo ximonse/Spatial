@@ -19,13 +19,13 @@ async function callOpenAIVisionAPI(apiKey, imageData) {
   // The prompt for OpenAI Vision. It's crucial to match the output format requested for Gemini.
   const prompt = `Transcribe the text from the image exactly as written and extract metadata.
 
-If the image contains more than just a handwritten note (e.g., a photo or scene), ALSO provide a visual description (3-5ntences). If it's only a handwritten note, the description can be null but tag it with #handskriven
+If the image contains more than just a handwritten note (e.g., a photo or scene), ALSO provide a short visual description (1-2 sentences). If it's only a handwritten note, the description can be null.
 
 IMPORTANT: Respond ONLY with a JSON structure according to this format:
 
 {
   "text": "[transcribed text here, or empty string if no text]",
-  "description": "[short scene/motif description, or tag it with #handskriven if only a hand  written note]",
+  "description": "[short scene/motif description, or null if only a handwritten note]",
   "metadata": {
     "extractedDate": "YYYY-MM-DD or null",
     "extractedTime": "HH:MM or null",
@@ -42,6 +42,7 @@ HASHTAG RULES:
 3. Category tags: #meeting #note #todo #invoice #contract #letter #receipt #photo etc
 4. Name tags: Mentioned persons, normalized (ex: #smith #jones)
 5. Place tags: Mentioned places (ex: #stockholm #office)
+6. Total hashtags: aim for 3-7 relevant tags. Do NOT include provider names (e.g., openai, gemini).
 
 METADATA INSTRUCTIONS:
 - extractedDate: Extract date from VISIBLE text in the image (YYYY-MM-DD format)
@@ -53,7 +54,7 @@ METADATA INSTRUCTIONS:
 DESCRIPTION INSTRUCTIONS:
 - If the image HAS NO readable text: Briefly describe what is shown (e.g., "A sunset over the sea", "A grey furry cat on a green old sofa")
 - If the image HAS text: Set description to null
-- Keep the description short and concise (3-5 sentences)
+- Keep the description short and concise (1-2 sentences)
 
 NOTE: We will later also add EXIF metadata from the file (GPS, file creator, original date etc), so keep the structure clean.`
 
@@ -158,8 +159,20 @@ export async function readImageWithOpenAI(cardId) {
     const mainContent = contentParts.join('\n\n');
 
     const existingTags = cardData.data.tags || [];
-    const newTags = (parsedData.hashtags || []).map(tag => tag.replace('#', ''));
-    const mergedTags = [...new Set([...existingTags, ...newTags, 'openai'])]; // Add #openai tag
+    const rawTags = parsedData.hashtags || [];
+    const cleanedTags = rawTags
+      .map(tag => String(tag || '').replace(/^#/, '').trim().toLowerCase())
+      .filter(tag => tag && tag !== 'openai' && tag !== 'gemini');
+    const limitedTags = cleanedTags.slice(0, 7);
+    const mergedTags = [];
+    const seen = new Set();
+    for (const t of [...existingTags, ...limitedTags]) {
+      const key = String(t).toLowerCase();
+      if (key && !seen.has(key)) {
+        seen.add(key);
+        mergedTags.push(t);
+      }
+    }
 
     const updates = {
       content: mainContent, // Put extracted text in main content field

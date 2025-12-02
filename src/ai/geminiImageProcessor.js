@@ -36,6 +36,7 @@ Hashtag rules:
 3) Category tags e.g. #mote #anteckning #todo #faktura #kontrakt #brev #kvitto #foto.
 4) Name tags for mentioned people.
 5) Place tags for mentioned locations.
+6) Total hashtags: aim for 3-7 relevant tags. Do NOT include provider names (e.g. gemini). Ensure tags are lowercase and meaningful.
 
 Description rules: Include a short description when there is a scene/motif. Use null if only a handwritten note.
 
@@ -142,8 +143,20 @@ export async function readImageWithGemini(cardId) {
     const mainContent = parts.join('\n\n');
 
     const existingTags = cardData.data.tags || [];
-    const newTags = (parsedData.hashtags || []).map(tag => tag.replace('#', ''));
-    const mergedTags = [...new Set([...existingTags, ...newTags, 'gemini'])]; // Add #gemini tag
+    const rawTags = parsedData.hashtags || [];
+    const cleanedTags = rawTags
+      .map(tag => String(tag || '').replace(/^#/, '').trim().toLowerCase())
+      .filter(tag => tag && tag !== 'gemini');
+    const limitedTags = cleanedTags.slice(0, 7); // cap at 7
+    const mergedTags = [];
+    const seen = new Set();
+    for (const t of [...existingTags, ...limitedTags]) {
+      const key = String(t).toLowerCase();
+      if (key && !seen.has(key)) {
+        seen.add(key);
+        mergedTags.push(t);
+      }
+    }
 
     const updates = {
       content: mainContent, // Put extracted text in main content field
