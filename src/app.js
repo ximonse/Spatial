@@ -203,6 +203,10 @@ export class SpatialNoteApp {
     searchInput?.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
+        // Select all search results explicitly
+        const results = state.get('searchResults') || [];
+        state.clearSelection();
+        results.forEach(id => state.selectCard(id));
         searchInput.blur(); // Leave search field
       }
     });

@@ -124,7 +124,12 @@ export class TextCard {
    */
   setSearchMatch(hasSearch, isMatch) {
     this.isSearchMatch = !hasSearch || isMatch;
+    const dimOpacity = this.isSearchMatch ? 1 : 0.35;
+    if (this.rect) {
+      this.rect.opacity(dimOpacity);
+    }
     this.contentOverlay.setSearchMatch(hasSearch, isMatch);
+    this.rect.getLayer()?.batchDraw();
   }
 
   /**

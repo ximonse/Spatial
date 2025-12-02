@@ -139,3 +139,69 @@ export async function restoreBackup() {
     input.click();
   });
 }
+
+/**
+ * Restore from a provided ZIP File (used by omni-import)
+ */
+export async function restoreBackupFromFile(file) {
+  return new Promise(async (resolve) => {
+    if (!file) {
+      resolve(false);
+      return;
+    }
+
+    try {
+      const zip = await JSZip.loadAsync(file);
+
+      // Read cards.json
+      const cardsFile = zip.file('cards.json');
+      if (!cardsFile) {
+        throw new Error('Invalid backup: cards.json not found');
+      }
+
+      const cardsText = await cardsFile.async('text');
+      const data = JSON.parse(cardsText);
+
+      // Confirm restore
+      const confirmed = confirm(
+        `Restore backup from ${new Date(data.backupDate).toLocaleString()}?\n\n` +
+        `${data.cardCount} cards\n\n` +
+        `This will ADD these cards to your existing collection.`
+      );
+
+      if (!confirmed) {
+        resolve(false);
+        return;
+      }
+
+      // Restore cards
+      for (const cardData of data.cards) {
+        await cardFactory.loadCard(cardData);
+      }
+
+      // Restore images
+      const imagesFolder = zip.folder('images');
+      if (imagesFolder) {
+        const imageFiles = [];
+        imagesFolder.forEach((relativePath, fileEntry) => {
+          imageFiles.push({ relativePath, fileEntry });
+        });
+
+        for (const { relativePath, fileEntry } of imageFiles) {
+          const cardId = parseInt(relativePath.replace('.png', ''));
+          const base64 = await fileEntry.async('base64');
+          const dataUrl = `data:image/png;base64,${base64}`;
+          await db.saveImage(cardId, { data: dataUrl });
+        }
+      }
+
+      console.log(`✓ Restored ${data.cards.length} cards from backup`);
+      alert(`Successfully restored ${data.cards.length} cards`);
+      resolve(true);
+    } catch (error) {
+      console.error('Restore failed:', error);
+      alert('Restore failed: ' + error.message);
+      resolve(false);
+    }
+  });
+}

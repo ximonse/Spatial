@@ -24,7 +24,7 @@ import { exportToJSON, importFromJSON } from '../io/jsonIO.js';
 import { createBackup, restoreBackup } from '../io/backup.js';
 import { multiImportFromText } from '../io/multiImport.js';
 import { showExportDialog } from '../io/textExport.js';
-import { importImage } from '../io/imageImport.js';
+import { omniImport } from '../io/omniImport.js';
 import { chatPanel } from './ChatPanel.js';
 
 /**
@@ -172,7 +172,7 @@ export function setupKeyboardShortcuts(app) {
 
       case 'i':
         if (!e.ctrlKey && !e.metaKey) {
-          importImage();
+          omniImport();
         }
         break;
 

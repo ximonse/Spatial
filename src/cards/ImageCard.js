@@ -207,9 +207,13 @@ export class ImageCard {
    */
   setSearchMatch(hasSearch, isMatch) {
     this.isSearchMatch = !hasSearch || isMatch;
+    const dimOpacity = this.isSearchMatch ? 1 : 0.35;
+    if (this.rect) this.rect.opacity(dimOpacity);
+    if (this.konvaImage) this.konvaImage.opacity(dimOpacity);
     if (this.contentOverlay) {
       this.contentOverlay.setSearchMatch(hasSearch, isMatch);
     }
+    this.group.getLayer()?.batchDraw();
   }
 
   /**

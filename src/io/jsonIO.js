@@ -118,3 +118,61 @@ export async function importFromJSON() {
     input.click();
   });
 }
+
+/**
+ * Import cards from provided JSON file (omni-import)
+ * @param {File} file
+ */
+export async function importFromJSONFile(file) {
+  return new Promise(async (resolve) => {
+    if (!file) {
+      resolve(false);
+      return;
+    }
+
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+
+      // Validate data
+      if (!data.cards || !Array.isArray(data.cards)) {
+        throw new Error('Invalid JSON format: missing cards array');
+      }
+
+      // Confirm import
+      const confirmed = confirm(
+        `Import ${data.cardCount || data.cards.length} cards?\n\n` +
+        `This will add cards to your existing collection.`
+      );
+
+      if (!confirmed) {
+        resolve(false);
+        return;
+      }
+
+      // Clear existing cards
+      await cardFactory.clearAll();
+      await db.clearAll();
+
+      // Import cards
+      for (const cardData of data.cards) {
+        await cardFactory.loadCard(cardData);
+      }
+
+      // Import images
+      if (data.images) {
+        for (const [cardId, imageData] of Object.entries(data.images)) {
+          await db.saveImage(parseInt(cardId), { data: imageData });
+        }
+      }
+
+      console.log(`✓ Imported ${data.cards.length} cards`);
+      alert(`Successfully imported ${data.cards.length} cards`);
+      resolve(true);
+    } catch (error) {
+      console.error('Import failed:', error);
+      alert('Import failed: ' + error.message);
+      resolve(false);
+    }
+  });
+}
